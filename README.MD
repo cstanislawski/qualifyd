@@ -46,7 +46,7 @@ Place candidates in practical testing scenarios such as:
   - can create a company profile
   - can invite members to the company & define their role - admin, editor, viewer (basic roles for now)
 
-## Future Roadmap
+### Future Roadmap
 
 - Expand Domain Coverage
   - Programming languages (Python, Go, etc.) - to cover a broader market
@@ -61,6 +61,16 @@ Place candidates in practical testing scenarios such as:
   - Tagging system for improved organization
   - Advanced role-based access control
   - Custom machine image support for diverse environments
+
+### Scenarios sources
+
+- [Killercoda](https://killercoda.com/)
+- [Play with Docker](https://training.play-with-docker.com/)
+- [Docker Labs](https://labs.play-with-docker.com/)
+- [Katacoda scenarios](https://github.com/orgs/katacoda-scenarios/repositories?type=source)
+- [Linux Survival](https://linuxsurvival.com/)
+- [Linux Journey](https://linuxjourney.com/)
+- [Linux Command](https://linuxcommand.org/)
 
 ## Why Qualifyd?
 
