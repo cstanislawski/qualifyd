@@ -4,13 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strings"
 	"sync"
 	"time"
 
+	"github.com/cstanislawski/qualifyd/pkg/logger"
 	"github.com/gorilla/websocket"
 	"golang.org/x/crypto/ssh"
 )
@@ -115,7 +115,7 @@ func (h *TerminalHub) Run() {
 				default:
 					close(terminal.send)
 					delete(h.terminals, terminal)
-					log.Printf("Backend: Terminal disconnected (buffer full) for assessment %s", terminal.assessmentID)
+					logger.Info("Terminal disconnected (buffer full)", map[string]interface{}{"assessmentID": terminal.assessmentID})
 				}
 			}
 			h.mu.Unlock()
@@ -125,16 +125,18 @@ func (h *TerminalHub) Run() {
 
 // ServeTerminalWs handles WebSocket connections for terminals
 func ServeTerminalWs(hub *TerminalHub, w http.ResponseWriter, r *http.Request, assessmentID string) {
-	// Log connection request with client IP
-	clientIP := r.Header.Get("X-Forwarded-For")
-	if clientIP == "" {
-		clientIP = r.RemoteAddr
-	}
-	log.Printf("Frontend: Initiating a connection to environment %s from %s", assessmentID, clientIP)
+	clientIP := r.RemoteAddr
+	logger.Info("Frontend: Initiating a connection to environment", map[string]interface{}{
+		"assessmentID": assessmentID,
+		"clientIP":     clientIP,
+	})
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Printf("Backend: Failed to upgrade connection for assessment %s from %s: %v", assessmentID, clientIP, err)
+		logger.Error("Failed to upgrade connection", err, map[string]interface{}{
+			"assessmentID": assessmentID,
+			"clientIP":     clientIP,
+		})
 		return
 	}
 
@@ -144,30 +146,31 @@ func ServeTerminalWs(hub *TerminalHub, w http.ResponseWriter, r *http.Request, a
 		assessmentID: assessmentID,
 	}
 
-	// Log connection attempt to SSH server
-	log.Printf("Backend: Attempting to connect to SSH server for assessment %s", assessmentID)
+	hub.register <- terminal
 
-	// Connect to the SSH server in the terminal container
-	err = terminal.connectSSH()
-	if err != nil {
-		log.Printf("Backend: Failed to connect to SSH server for assessment %s: %v", assessmentID, err)
-		conn.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf("Error connecting to terminal: %v", err)))
+	logger.Info("Attempting to connect to SSH server", map[string]interface{}{
+		"assessmentID": assessmentID,
+	})
+
+	if err := terminal.connectSSH(); err != nil {
+		logger.Error("Failed to connect to SSH server", err, map[string]interface{}{
+			"assessmentID": assessmentID,
+		})
+		hub.unregister <- terminal
 		conn.Close()
 		return
 	}
 
-	// Log successful SSH connection
-	log.Printf("Backend: Successfully connected to SSH server for assessment %s", assessmentID)
+	logger.Info("Successfully connected to SSH server", map[string]interface{}{
+		"assessmentID": assessmentID,
+	})
 
-	hub.register <- terminal
-
-	// Log successful WebSocket connection
-	log.Printf("Backend: Terminal connected for assessment %s", assessmentID)
-
-	// Allow collection of memory referenced by the caller by doing all work in
-	// new goroutines.
-	go terminal.writePump()
 	go terminal.readPump(hub)
+	go terminal.writePump()
+
+	logger.Info("Terminal connected", map[string]interface{}{
+		"assessmentID": assessmentID,
+	})
 }
 
 // connectSSH establishes an SSH connection to the terminal container
@@ -264,7 +267,7 @@ func (t *Terminal) connectSSH() error {
 			n, err := stdout.Read(buf)
 			if err != nil {
 				if err != io.EOF {
-					log.Printf("Error reading from stdout: %v", err)
+					logger.Error("Error reading from stdout", err, nil)
 				}
 				break
 			}
@@ -280,7 +283,7 @@ func (t *Terminal) connectSSH() error {
 			n, err := stderr.Read(buf)
 			if err != nil {
 				if err != io.EOF {
-					log.Printf("Error reading from stderr: %v", err)
+					logger.Error("Error reading from stderr", err, nil)
 				}
 				break
 			}
@@ -296,11 +299,15 @@ func (t *Terminal) connectSSH() error {
 // readPump pumps messages from the WebSocket connection to the hub.
 func (t *Terminal) readPump(hub *TerminalHub) {
 	defer func() {
-		log.Printf("Backend: Closing SSH connection for assessment %s", t.assessmentID)
+		logger.Info("Closing SSH connection", map[string]interface{}{
+			"assessmentID": t.assessmentID,
+		})
 		t.closeSSH()
 		hub.unregister <- t
 		t.conn.Close()
-		log.Printf("Backend: Terminal disconnected for assessment %s", t.assessmentID)
+		logger.Info("Terminal disconnected", map[string]interface{}{
+			"assessmentID": t.assessmentID,
+		})
 	}()
 
 	t.conn.SetReadLimit(maxMessageSize)
@@ -315,9 +322,13 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 		_, message, err := t.conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				log.Printf("Backend: WebSocket error for assessment %s: %v", t.assessmentID, err)
+				logger.Error("WebSocket error", err, map[string]interface{}{
+					"assessmentID": t.assessmentID,
+				})
 			} else {
-				log.Printf("Backend: WebSocket closed for assessment %s", t.assessmentID)
+				logger.Info("WebSocket closed", map[string]interface{}{
+					"assessmentID": t.assessmentID,
+				})
 			}
 			break
 		}
@@ -339,10 +350,7 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 			// Handle the message based on its type
 			switch cmd.Type {
 			case "ping":
-				// We don't need to send a visible pong response anymore
-				// Just log that we received a ping from the client for debugging purposes
-				log.Printf("Debug: Received ping from client (connection keepalive)")
-				// No need to send a visible pong response
+				logger.Debug("Received ping from client (connection keepalive)")
 
 			case "data":
 				// Direct data mode - send raw keystrokes straight to the TTY
@@ -352,7 +360,9 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 						bytes[i] = byte(code)
 					}
 					if _, err := t.stdin.Write(bytes); err != nil {
-						log.Printf("Backend: Error writing data to terminal for assessment %s: %v", t.assessmentID, err)
+						logger.Error("Error writing data to terminal", err, map[string]interface{}{
+							"assessmentID": t.assessmentID,
+						})
 					}
 				}
 
@@ -362,10 +372,16 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 					width := cmd.Dimensions.Cols
 					height := cmd.Dimensions.Rows
 					if width > 0 && height > 0 {
-						log.Printf("Backend: Resizing terminal to %dx%d for assessment %s", width, height, t.assessmentID)
+						logger.Info("Resizing terminal", map[string]interface{}{
+							"width":        width,
+							"height":       height,
+							"assessmentID": t.assessmentID,
+						})
 						err := t.sshSession.WindowChange(height, width)
 						if err != nil {
-							log.Printf("Backend: Failed to resize terminal for assessment %s: %v", t.assessmentID, err)
+							logger.Error("Failed to resize terminal", err, map[string]interface{}{
+								"assessmentID": t.assessmentID,
+							})
 						}
 					}
 				}
@@ -373,7 +389,9 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 			case "command":
 				// For backward compatibility, handle command messages
 				command := cmd.Command
-				log.Printf("Backend: Executing command in terminal for assessment %s", t.assessmentID)
+				logger.Info("Executing command in terminal", map[string]interface{}{
+					"assessmentID": t.assessmentID,
+				})
 
 				// Make sure it ends with a newline for proper execution
 				if len(command) > 0 && t.stdin != nil {
@@ -382,21 +400,29 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 					command = strings.TrimSuffix(command, "\n")
 					finalCommand := command + "\n"
 					if _, err := t.stdin.Write([]byte(finalCommand)); err != nil {
-						log.Printf("Backend: Error executing command in terminal for assessment %s: %v", t.assessmentID, err)
+						logger.Error("Error executing command in terminal", err, map[string]interface{}{
+							"assessmentID": t.assessmentID,
+						})
 					}
 				} else if t.stdin != nil {
 					// Empty command, just send a newline
 					if _, err := t.stdin.Write([]byte("\n")); err != nil {
-						log.Printf("Backend: Error sending newline to terminal for assessment %s: %v", t.assessmentID, err)
+						logger.Error("Error sending newline to terminal", err, map[string]interface{}{
+							"assessmentID": t.assessmentID,
+						})
 					}
 				}
 
 			case "signal":
 				if cmd.Signal == "SIGINT" && t.stdin != nil {
 					// Send Ctrl+C to the terminal
-					log.Printf("Backend: Sending SIGINT to terminal for assessment %s", t.assessmentID)
+					logger.Info("Sending SIGINT to terminal", map[string]interface{}{
+						"assessmentID": t.assessmentID,
+					})
 					if _, err := t.stdin.Write([]byte{3}); err != nil {
-						log.Printf("Backend: Error sending SIGINT to terminal for assessment %s: %v", t.assessmentID, err)
+						logger.Error("Error sending SIGINT to terminal", err, map[string]interface{}{
+							"assessmentID": t.assessmentID,
+						})
 					}
 				}
 			}
@@ -408,7 +434,9 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 					command += "\n"
 				}
 				if _, err := t.stdin.Write([]byte(command)); err != nil {
-					log.Printf("Backend: Error sending text command to terminal for assessment %s: %v", t.assessmentID, err)
+					logger.Error("Error sending text command to terminal", err, map[string]interface{}{
+						"assessmentID": t.assessmentID,
+					})
 				}
 			}
 		}
@@ -421,7 +449,9 @@ func (t *Terminal) writePump() {
 	defer func() {
 		ticker.Stop()
 		t.conn.Close()
-		log.Printf("Backend: Closed WebSocket writer for assessment %s", t.assessmentID)
+		logger.Info("Closed WebSocket writer", map[string]interface{}{
+			"assessmentID": t.assessmentID,
+		})
 	}()
 
 	for {
@@ -430,14 +460,18 @@ func (t *Terminal) writePump() {
 			t.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if !ok {
 				// The hub closed the channel.
-				log.Printf("Backend: Hub closed channel for assessment %s", t.assessmentID)
+				logger.Info("Hub closed channel", map[string]interface{}{
+					"assessmentID": t.assessmentID,
+				})
 				t.conn.WriteMessage(websocket.CloseMessage, []byte{})
 				return
 			}
 
 			w, err := t.conn.NextWriter(websocket.TextMessage)
 			if err != nil {
-				log.Printf("Backend: Error getting next writer for assessment %s: %v", t.assessmentID, err)
+				logger.Error("Error getting next writer", err, map[string]interface{}{
+					"assessmentID": t.assessmentID,
+				})
 				return
 			}
 			w.Write(message)
@@ -449,13 +483,17 @@ func (t *Terminal) writePump() {
 			}
 
 			if err := w.Close(); err != nil {
-				log.Printf("Backend: Error closing writer for assessment %s: %v", t.assessmentID, err)
+				logger.Error("Error closing writer", err, map[string]interface{}{
+					"assessmentID": t.assessmentID,
+				})
 				return
 			}
 		case <-ticker.C:
 			t.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := t.conn.WriteMessage(websocket.PingMessage, nil); err != nil {
-				log.Printf("Backend: Error sending ping for assessment %s: %v", t.assessmentID, err)
+				logger.Error("Error sending ping", err, map[string]interface{}{
+					"assessmentID": t.assessmentID,
+				})
 				return
 			}
 		}

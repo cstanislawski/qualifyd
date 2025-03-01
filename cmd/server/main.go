@@ -2,16 +2,23 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/cstanislawski/qualifyd/internal/ws"
+	"github.com/cstanislawski/qualifyd/pkg/logger"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/rs/zerolog"
 )
 
 func main() {
+	// Initialize logger
+	logger.Init(
+		logger.WithLevel(zerolog.InfoLevel),
+		logger.WithCaller(true),
+	)
+
 	// Initialize websocket hub
 	terminalHub := ws.NewTerminalHub()
 	go terminalHub.Run()
@@ -19,7 +26,7 @@ func main() {
 	r := chi.NewRouter()
 
 	// Middleware
-	r.Use(middleware.Logger)
+	r.Use(logger.HTTPMiddleware)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.AllowContentType("application/json"))
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
@@ -60,7 +67,9 @@ func main() {
 	}
 
 	fmt.Printf("API Server starting on port %s...\n", port)
-	log.Fatal(http.ListenAndServe(":"+port, r))
+	if err := http.ListenAndServe(":"+port, r); err != nil {
+		logger.Fatal("Failed to start server", err, map[string]interface{}{"port": port})
+	}
 }
 
 // API Handlers
