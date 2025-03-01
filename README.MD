@@ -104,7 +104,7 @@ Qualifyd addresses these limitations by providing realistic, configurable enviro
 | Team members | Up to 5 | ∞ | ∞ |
 | Custom templates | 5 | 20 | Unlimited |
 | Concurrent environments | 3 | 10 | Configurable |
-| Included environment minutes/month (2cpu/4gb/50gb as baseline)* | 900 | 3600 | Configurable |
+| Included environment minutes/month (2cpu/4gb/50gb as baseline)¹ | 900 | 3600 | Configurable |
 | Overage rate (2cpu/4gb/50gb as baseline) | $0.20/min | $0.15/min | $0.10/min |
 | Custom machine sizes | - | ✓ | ✓ |
 | Environment runtime | Up to 2 hours | Up to 8 hours | Configurable |
@@ -118,7 +118,7 @@ Qualifyd addresses these limitations by providing realistic, configurable enviro
 
 The offer does not match your needs? Contact us and we'll work something out!
 
-* - does not include the startup time of the environment
+¹ - machine startup time is always free and does not count towards the included minutes
 
 (not final, just a placeholder/proposal)
 
