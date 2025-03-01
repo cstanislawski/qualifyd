@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o qualifyd ./cmd/server
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o server ./cmd/server
 
 # Final stage
 FROM alpine:3.18
@@ -29,10 +29,7 @@ RUN apk add --no-cache ca-certificates tzdata bash
 WORKDIR /app
 
 # Copy the binary from builder
-COPY --from=builder /app/qualifyd .
-
-# Copy UI templates and static files
-COPY ui/ ./ui/
+COPY --from=builder /app .
 
 # Set environment variables
 ENV PORT=8080
@@ -41,4 +38,4 @@ ENV PORT=8080
 EXPOSE 8080
 
 # Run the application
-CMD ["./qualifyd"]
+CMD ["./server"]
