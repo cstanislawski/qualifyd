@@ -1,4 +1,21 @@
 services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_WS_HOST=localhost:8080
+    container_name: qualifyd-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_WS_HOST=localhost:8080
+    depends_on:
+      - app
+    networks:
+      - qualifyd-network
+    restart: unless-stopped
+
   app:
     build:
       context: .
