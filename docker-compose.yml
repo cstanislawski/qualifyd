@@ -1,0 +1,69 @@
+services:
+  # Main application service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qualifyd-app
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - TERMINAL_HOST=terminal
+      - TERMINAL_PORT=22
+      - TERMINAL_USER=candidate
+      - TERMINAL_PASSWORD=password
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=qualifyd
+    depends_on:
+      - db
+      - terminal
+    networks:
+      - qualifyd-network
+    restart: unless-stopped
+
+  # Terminal service for candidate assessments
+  terminal:
+    build:
+      context: .
+      dockerfile: Dockerfile.terminal
+    container_name: qualifyd-terminal
+    volumes:
+      - terminal-data:/home/candidate/assessment
+    networks:
+      - qualifyd-network
+    restart: unless-stopped
+    # For security in production, consider removing this port mapping
+    # and only allowing access through the app service
+    ports:
+      - "2222:22"
+
+  # Database service
+  db:
+    image: postgres:15-alpine
+    container_name: qualifyd-db
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=qualifyd
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - qualifyd-network
+    restart: unless-stopped
+    # For development only, consider removing this port mapping in production
+    ports:
+      - "5432:5432"
+
+networks:
+  qualifyd-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+    driver: local
+  terminal-data:
+    driver: local

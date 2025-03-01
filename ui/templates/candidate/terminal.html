@@ -1,0 +1,252 @@
+{{define "title"}}Terminal - Assessment {{.AssessmentID}} - Qualifyd{{end}}
+
+{{define "head"}}
+<style>
+    /* Custom styles for terminal page */
+    body {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        overflow: hidden;
+    }
+
+    .terminal-layout {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .terminal-sidebar {
+        width: 35%;
+        max-width: 500px;
+        overflow-y: auto;
+        padding: 1rem;
+        border-right: 1px solid #e5e7eb;
+    }
+
+    .terminal-main {
+        flex: 1;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        padding: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .terminal-layout {
+            flex-direction: column;
+        }
+
+        .terminal-sidebar {
+            width: 100%;
+            max-width: none;
+            border-right: none;
+            border-bottom: 1px solid #e5e7eb;
+            max-height: 40vh;
+        }
+
+        .terminal-main {
+            width: 100%;
+        }
+    }
+</style>
+{{end}}
+
+{{define "content"}}
+<div class="bg-white shadow-sm border-b border-gray-200">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center py-3">
+            <div class="flex items-center">
+                <h1 class="text-lg font-semibold text-gray-900">Assessment: {{.AssessmentTitle}}</h1>
+                <span class="ml-4 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    In Progress
+                </span>
+            </div>
+
+            <div class="flex items-center space-x-4">
+                <div class="text-sm text-gray-500">
+                    Time Remaining: <span id="assessment-timer" class="assessment-timer">{{.TimeRemaining}}</span>
+                </div>
+
+                <button id="submit-assessment" class="btn-submit-assessment">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                    </svg>
+                    Submit Assessment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="terminal-layout">
+    <div class="terminal-sidebar">
+        <div class="instructions-panel">
+            <div class="instructions-panel-header">
+                Instructions
+            </div>
+            <div class="instructions-panel-body">
+                <div class="instructions-task">
+                    <div class="instructions-task-header">
+                        <div class="instructions-task-number">1</div>
+                        <div class="instructions-task-title">Fix the broken deployment</div>
+                    </div>
+                    <div class="instructions-task-description">
+                        <p>The web application deployment is failing. Identify the issue and fix it so that the pods are running correctly.</p>
+                        <p class="mt-2">You can check the status of the deployment using:</p>
+                        <pre class="instructions-code">kubectl get deployments
+kubectl describe deployment web-app
+kubectl get pods</pre>
+                    </div>
+                </div>
+
+                <div class="instructions-task">
+                    <div class="instructions-task-header">
+                        <div class="instructions-task-number">2</div>
+                        <div class="instructions-task-title">Scale the application</div>
+                    </div>
+                    <div class="instructions-task-description">
+                        <p>Scale the web application to 3 replicas to handle increased load and ensure high availability.</p>
+                        <p class="mt-2">You can scale the deployment using:</p>
+                        <pre class="instructions-code">kubectl scale deployment web-app --replicas=3</pre>
+                        <p class="mt-2">Also, create a PodDisruptionBudget to ensure at least 2 pods are always available during voluntary disruptions.</p>
+                    </div>
+                </div>
+
+                <div class="instructions-task">
+                    <div class="instructions-task-header">
+                        <div class="instructions-task-number">3</div>
+                        <div class="instructions-task-title">Configure health checks</div>
+                    </div>
+                    <div class="instructions-task-description">
+                        <p>Add appropriate readiness and liveness probes to the deployment to ensure proper health monitoring.</p>
+                        <p class="mt-2">The application exposes the following endpoints:</p>
+                        <ul class="list-disc ml-5 mt-1">
+                            <li>/health/ready - for readiness checks</li>
+                            <li>/health/live - for liveness checks</li>
+                        </ul>
+                        <p class="mt-2">You'll need to edit the deployment to add these probes.</p>
+                    </div>
+                </div>
+
+                <div class="instructions-task">
+                    <div class="instructions-task-header">
+                        <div class="instructions-task-number">4</div>
+                        <div class="instructions-task-title">Set up resource limits</div>
+                    </div>
+                    <div class="instructions-task-description">
+                        <p>Configure appropriate resource requests and limits for the deployment to ensure efficient resource utilization.</p>
+                        <p class="mt-2">Based on observed usage patterns, set:</p>
+                        <ul class="list-disc ml-5 mt-1">
+                            <li>CPU request: 100m</li>
+                            <li>CPU limit: 200m</li>
+                            <li>Memory request: 128Mi</li>
+                            <li>Memory limit: 256Mi</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="instructions-task">
+                    <div class="instructions-task-header">
+                        <div class="instructions-task-number">5</div>
+                        <div class="instructions-task-title">Verify the application</div>
+                    </div>
+                    <div class="instructions-task-description">
+                        <p>Ensure the application is running correctly and accessible. The application should be available at:</p>
+                        <pre class="instructions-code">http://web-app.example.com</pre>
+                        <p class="mt-2">You can use the following command to check if the application is responding:</p>
+                        <pre class="instructions-code">curl -I http://web-app.example.com</pre>
+                        <p class="mt-2">The response should include <code>HTTP/1.1 200 OK</code>.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="terminal-main">
+        <div id="terminal" class="terminal-container h-full">
+            <div class="terminal-header">
+                <div class="terminal-header-dots">
+                    <div class="terminal-header-dot terminal-header-dot-red"></div>
+                    <div class="terminal-header-dot terminal-header-dot-yellow"></div>
+                    <div class="terminal-header-dot terminal-header-dot-green"></div>
+                </div>
+                <div class="terminal-header-title">candidate@qualifyd:~</div>
+                <div></div>
+            </div>
+            <div class="terminal-body"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Submission confirmation dialog (hidden by default) -->
+<div id="submit-dialog" class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center hidden z-50">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <h3 class="text-lg font-medium text-gray-900">Submit Assessment?</h3>
+        <p class="mt-2 text-sm text-gray-500">
+            Are you sure you want to submit your assessment? This action cannot be undone.
+        </p>
+        <div class="mt-4 flex justify-end space-x-3">
+            <button type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" onclick="document.getElementById('submit-dialog').classList.add('hidden')">
+                Cancel
+            </button>
+            <button type="button" class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" id="confirm-submit">
+                Submit Assessment
+            </button>
+        </div>
+    </div>
+</div>
+{{end}}
+
+{{define "scripts"}}
+<script src="/static/js/terminal.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Show confirmation dialog when submit button is clicked
+        const submitButton = document.getElementById('submit-assessment');
+        const submitDialog = document.getElementById('submit-dialog');
+        const confirmSubmitButton = document.getElementById('confirm-submit');
+
+        if (submitButton && submitDialog) {
+            submitButton.addEventListener('click', function() {
+                submitDialog.classList.remove('hidden');
+            });
+        }
+
+        // Handle actual submission when confirmed
+        if (confirmSubmitButton) {
+            confirmSubmitButton.addEventListener('click', function() {
+                // Show loading state
+                this.disabled = true;
+                this.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Submitting...';
+
+                // Submit the assessment
+                fetch('/api/assessments/{{.AssessmentID}}/submit', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        window.location.href = '/candidate/assessments/{{.AssessmentID}}/submitted';
+                    } else {
+                        alert('Failed to submit assessment: ' + (data.message || 'Unknown error'));
+                        confirmSubmitButton.disabled = false;
+                        confirmSubmitButton.innerHTML = 'Submit Assessment';
+                        submitDialog.classList.add('hidden');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error submitting assessment:', error);
+                    alert('An error occurred while submitting your assessment. Please try again.');
+                    confirmSubmitButton.disabled = false;
+                    confirmSubmitButton.innerHTML = 'Submit Assessment';
+                    submitDialog.classList.add('hidden');
+                });
+            });
+        }
+    });
+</script>
+{{end}}
