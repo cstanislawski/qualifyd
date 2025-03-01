@@ -28,14 +28,26 @@ export default function XTermComponents({
     // Connect directly to the backend WebSocket server
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const wsHost = process.env.NEXT_PUBLIC_WS_HOST || window.location.host;
-    const socket = new WebSocket(`${protocol}//${wsHost}/ws/terminal/${assessmentId}`);
+    const wsUrl = `${protocol}//${wsHost}/ws/terminal/${assessmentId}`;
+    console.log(`Connecting to WebSocket at: ${wsUrl}`);
+
+    const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
 
     socket.onopen = () => {
+      console.log('WebSocket connection established');
       setIsConnected(true);
       term.writeln('Connected to terminal.');
       term.writeln('Type commands and press Enter to execute them.');
       term.writeln('');
+
+      // Test the connection by sending a ping
+      try {
+        socket.send(JSON.stringify({ type: 'ping' }));
+        console.log('Ping sent to server');
+      } catch (e) {
+        console.error('Error sending ping:', e);
+      }
 
       // Set up the data handler after socket is connected
       setupTerminalDataHandler(term, socket);
@@ -58,6 +70,24 @@ export default function XTermComponents({
   }, [assessmentId, setIsConnected]);
 
   const setupTerminalDataHandler = (term: XTerm, socket: WebSocket) => {
+    // Helper function to send a command to the server
+    const sendCommand = (cmd: string) => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        try {
+          // Explicitly format the command
+          const commandToSend = cmd + '\n';
+          console.log('Sending command:', JSON.stringify(commandToSend));
+          socket.send(commandToSend);
+        } catch (e) {
+          console.error('Error sending command:', e);
+          term.writeln(`\r\nError sending command: ${e}`);
+        }
+      } else {
+        console.error('WebSocket not connected');
+        term.writeln('\r\nError: Terminal connection lost. Please refresh the page.');
+      }
+    };
+
     // Handle keyboard input from terminal
     term.onData((data) => {
       if (socket && socket.readyState === WebSocket.OPEN) {
@@ -65,18 +95,37 @@ export default function XTermComponents({
         if (data === '\r') {
           // Enter key - send the entire buffer to the server
           if (inputBuffer.length > 0) {
+            // Store the current command before clearing the buffer
+            const commandToSend = inputBuffer;
+
             // Echo a newline locally
             term.write('\r\n');
 
-            // Send the command to the server
-            socket.send(inputBuffer + '\r');
+            // Send the command to the server - use the stored command, not the potentially cleared buffer
+            console.log('Sending command:', commandToSend);
+            sendCommand(commandToSend);
+
+            // Now clear the buffer
             setInputBuffer('');
             setCursorPosition(0);
           } else {
             // Empty buffer, just send a newline
             term.write('\r\n');
-            socket.send('\r');
+            sendCommand('');
           }
+        } else if (data === '\x03') {
+          // Ctrl+C - send SIGINT signal
+          socket.send(JSON.stringify({ type: 'signal', signal: 'SIGINT' }));
+          // Echo ^C locally
+          term.write('^C\r\n');
+          setInputBuffer('');
+          setCursorPosition(0);
+        } else if (data === '\x04') {
+          // Ctrl+D - send EOF
+          socket.send('\x04');
+        } else if (data === '\t') {
+          // Tab - send directly for tab completion
+          socket.send('\t');
         } else if (data === '\x7F') {
           // Backspace key
           if (cursorPosition > 0) {
