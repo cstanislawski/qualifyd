@@ -191,12 +191,12 @@ func (t *Terminal) connectSSH() error {
 	t.sshSession = session
 
 	// Set up terminal modes
-	// ECHO: echo input characters (turned off because we're echoing locally in the frontend)
+	// ECHO: echo input characters (turned on because we're sending raw keystrokes now)
 	// ICRNL: translate CR to NL on input (for proper command execution)
 	// ISIG: enable signals (Ctrl+C, etc.)
 	// ICANON: enable canonical mode (line-by-line input processing)
 	modes := ssh.TerminalModes{
-		ssh.ECHO:          0, // Echo off - we're handling echo in the frontend
+		ssh.ECHO:          1, // Echo on - we're now passing raw keystrokes directly
 		ssh.IGNCR:         0, // Don't ignore CR on input
 		ssh.ICRNL:         1, // Map CR to NL on input
 		ssh.INLCR:         0, // Don't map NL to CR on input
@@ -300,12 +300,6 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 			break
 		}
 
-		// Log the raw message bytes to debug encoding issues
-		log.Printf("Raw message bytes: %v", message)
-
-		// Debug log to see what we're receiving as string
-		log.Printf("Received message as string: %q", string(message))
-
 		// Parse the message as JSON
 		var cmd struct {
 			Type       string `json:"type"`
@@ -319,34 +313,30 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 			} `json:"dimensions"`
 		}
 
-		// Default to treating the message as a command
-		command := string(message)
-
-		// Try to parse as JSON, but continue if it fails
-		// This allows for both JSON and plain text commands
 		if err := json.Unmarshal(message, &cmd); err == nil {
-			if cmd.Type == "ping" {
+			// Handle the message based on its type
+			switch cmd.Type {
+			case "ping":
 				// This is a ping message to test connectivity
 				log.Printf("Received ping from client, sending pong response")
-
-				// Respond with a pong message
 				pongResponse := []byte(`{"type":"pong"}`)
 				t.conn.WriteMessage(websocket.TextMessage, pongResponse)
-				continue
-			} else if cmd.Type == "command" {
-				command = cmd.Command
-				log.Printf("Parsed command from JSON: %q", command)
-			} else if cmd.Type == "signal" && cmd.Signal == "SIGINT" {
-				// Send Ctrl+C to the terminal
-				log.Printf("Sending SIGINT to terminal")
-				t.stdin.Write([]byte{3})
-				continue
-			} else if cmd.Type == "resize" {
+
+			case "data":
+				// Direct data mode - send raw keystrokes straight to the TTY
+				if len(cmd.Data) > 0 && t.stdin != nil {
+					bytes := make([]byte, len(cmd.Data))
+					for i, code := range cmd.Data {
+						bytes[i] = byte(code)
+					}
+					t.stdin.Write(bytes)
+				}
+
+			case "resize":
 				// Window size has changed - update the PTY size
 				if t.sshSession != nil {
 					width := cmd.Dimensions.Cols
 					height := cmd.Dimensions.Rows
-
 					if width > 0 && height > 0 {
 						log.Printf("Resizing terminal to %dx%d", width, height)
 						err := t.sshSession.WindowChange(height, width)
@@ -355,66 +345,39 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 						}
 					}
 				}
-				continue
-			} else if cmd.Type == "special" {
-				// Handle special keys
-				log.Printf("Received special key: %s", cmd.Key)
-				switch cmd.Key {
-				case "tab":
-					t.stdin.Write([]byte{9}) // Tab character
-				case "up_arrow":
-					t.stdin.Write([]byte{27, 91, 65}) // ESC [ A
-				case "down_arrow":
-					t.stdin.Write([]byte{27, 91, 66}) // ESC [ B
-				default:
-					log.Printf("Unknown special key: %s", cmd.Key)
+
+			case "command":
+				// For backward compatibility, handle command messages
+				command := cmd.Command
+				log.Printf("Parsed command from JSON: %q", command)
+
+				// Make sure it ends with a newline for proper execution
+				if len(command) > 0 && t.stdin != nil {
+					// Normalize line endings
+					command = strings.TrimSuffix(command, "\r")
+					command = strings.TrimSuffix(command, "\n")
+					finalCommand := command + "\n"
+					t.stdin.Write([]byte(finalCommand))
+				} else if t.stdin != nil {
+					// Empty command, just send a newline
+					t.stdin.Write([]byte("\n"))
 				}
-				continue
-			} else if cmd.Type == "control" {
-				// Handle raw control characters
-				log.Printf("Received control data: %v", cmd.Data)
-				if len(cmd.Data) > 0 {
-					bytes := make([]byte, len(cmd.Data))
-					for i, code := range cmd.Data {
-						bytes[i] = byte(code)
-					}
-					t.stdin.Write(bytes)
+
+			case "signal":
+				if cmd.Signal == "SIGINT" && t.stdin != nil {
+					// Send Ctrl+C to the terminal
+					log.Printf("Sending SIGINT to terminal")
+					t.stdin.Write([]byte{3})
 				}
-				continue
 			}
-		}
-
-		// Debug log to see what we're receiving
-		log.Printf("Final command to execute: %q", command)
-
-		// Send the command to the SSH session
-		if t.stdin != nil {
-			// Process the command to ensure it's properly formatted for execution
-			// Make sure it ends with a newline for proper execution
-			if len(command) > 0 {
-				// Normalize line endings
-				command = strings.TrimSuffix(command, "\r")
-				command = strings.TrimSuffix(command, "\n")
-
-				// Always ensure we end with a newline for execution
-				finalCommand := command + "\n"
-
-				log.Printf("Sending to SSH: %q", finalCommand)
-
-				bytesWritten, err := t.stdin.Write([]byte(finalCommand))
-				if err != nil {
-					log.Printf("Error writing to SSH stdin: %v", err)
-				} else {
-					log.Printf("Successfully wrote %d bytes to SSH stdin", bytesWritten)
+		} else {
+			// Handle as a plain text command for backward compatibility
+			if t.stdin != nil {
+				command := string(message)
+				if !strings.HasSuffix(command, "\n") {
+					command += "\n"
 				}
-			} else {
-				// Empty command, just send a newline
-				bytesWritten, err := t.stdin.Write([]byte("\n"))
-				if err != nil {
-					log.Printf("Error writing empty command to SSH stdin: %v", err)
-				} else {
-					log.Printf("Successfully wrote %d bytes (empty command) to SSH stdin", bytesWritten)
-				}
+				t.stdin.Write([]byte(command))
 			}
 		}
 	}

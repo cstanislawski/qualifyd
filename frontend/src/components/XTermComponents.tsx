@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, MutableRefObject, Dispatch, SetStateAction, useCallback } from 'react';
+import { useEffect, useRef, MutableRefObject, Dispatch, SetStateAction, useCallback } from 'react';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
@@ -19,15 +19,7 @@ export default function XTermComponents({
 }: XTermComponentsProps) {
   const xtermRef = useRef<XTerm | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
-  const inputBufferRef = useRef<string>('');
-  const [inputBuffer, setInputBuffer] = useState('');
-  const cursorPositionRef = useRef<number>(0);
   const fitAddonRef = useRef<FitAddon | null>(null);
-
-  useEffect(() => {
-    // This effect is purely for debugging - helps track what's happening with the input buffer
-    console.log('Input buffer state updated:', inputBuffer);
-  }, [inputBuffer]);
 
   // Define connectWebSocket as a useCallback to avoid dependency issues
   const connectWebSocket = useCallback((term: XTerm) => {
@@ -76,129 +68,20 @@ export default function XTermComponents({
   }, [assessmentId, setIsConnected]);
 
   const setupTerminalDataHandler = (term: XTerm, socket: WebSocket) => {
-    // Reset input buffer and cursor position
-    inputBufferRef.current = '';
-    cursorPositionRef.current = 0;
-    setInputBuffer('');
-
-    // Helper function to send a command to the server
-    const sendCommand = (cmd: string) => {
+    // Handle keyboard input from terminal - send each keystroke directly to the server
+    term.onData((data) => {
       if (socket && socket.readyState === WebSocket.OPEN) {
         try {
-          // Format the command as a JSON object to ensure proper handling on the backend
-          console.log('sendCommand received command:', cmd, typeof cmd, 'length:', cmd.length);
-
-          // Additional validation to ensure we're sending a string
-          const validatedCmd = typeof cmd === 'string' ? cmd : String(cmd);
-
-          const commandObject = {
-            type: "command",
-            command: validatedCmd
-          };
-          console.log('Sending JSON command:', JSON.stringify(commandObject));
-          socket.send(JSON.stringify(commandObject));
+          // Send the raw data directly to the server
+          socket.send(JSON.stringify({
+            type: 'data',
+            data: Array.from(data).map(c => c.charCodeAt(0))
+          }));
         } catch (e) {
-          console.error('Error sending command:', e);
-          term.writeln(`\r\nError sending command: ${e}`);
+          console.error('Error sending data to server:', e);
         }
       } else {
         console.error('WebSocket not connected');
-        term.writeln('\r\nError: Terminal connection lost. Please refresh the page.');
-      }
-    };
-
-    // Handle keyboard input from terminal
-    term.onData((data) => {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        // Handle special keys and normal input differently
-        if (data === '\r') {
-          // Enter key - send the entire buffer to the server
-          if (inputBufferRef.current.length > 0) {
-            // Store the current command before clearing the buffer
-            const commandToSend = inputBufferRef.current;
-            console.log('Enter pressed, sending command:', commandToSend, 'Buffer length:', inputBufferRef.current.length);
-
-            // Don't echo a newline locally - let the server response handle this
-            // term.write('\r\n');  <-- Remove this line to fix the double newline issue
-
-            // Send the command to the server - use the stored command, not the potentially cleared buffer
-            console.log('Sending command:', commandToSend);
-            sendCommand(commandToSend);
-
-            // Now clear the buffer
-            inputBufferRef.current = '';
-            setInputBuffer('');
-            cursorPositionRef.current = 0;
-          } else {
-            // Empty buffer, just send a newline without echoing locally
-            // term.write('\r\n');  <-- Remove this line as well
-            sendCommand('');
-          }
-        } else if (data === '\x03') {
-          // Ctrl+C - send SIGINT signal
-          socket.send(JSON.stringify({ type: 'signal', signal: 'SIGINT' }));
-          // Echo ^C locally
-          term.write('^C\r\n');
-          inputBufferRef.current = '';
-          setInputBuffer('');
-          cursorPositionRef.current = 0;
-        } else if (data === '\x04') {
-          // Ctrl+D - send EOF
-          socket.send('\x04');
-        } else if (data === '\t') {
-          // Tab - send for tab completion
-          socket.send(JSON.stringify({ type: 'special', key: 'tab' }));
-        } else if (data === '\x7F') {
-          // Backspace key
-          if (cursorPositionRef.current > 0) {
-            // Remove the character before the cursor
-            const newBuffer = inputBufferRef.current.substring(0, cursorPositionRef.current - 1) +
-                              inputBufferRef.current.substring(cursorPositionRef.current);
-            inputBufferRef.current = newBuffer;
-            setInputBuffer(newBuffer);
-            cursorPositionRef.current = Math.max(0, cursorPositionRef.current - 1);
-
-            // Echo the backspace locally
-            term.write('\b \b'); // Move cursor back, clear character, move cursor back again
-          }
-        } else if (data === '\u001b[A') {
-          // Up arrow - could implement history here
-          // For now, just pass to server
-          socket.send(JSON.stringify({ type: 'special', key: 'up_arrow' }));
-        } else if (data === '\u001b[B') {
-          // Down arrow - could implement history here
-          // For now, just pass to server
-          socket.send(JSON.stringify({ type: 'special', key: 'down_arrow' }));
-        } else if (data === '\u001b[C') {
-          // Right arrow - move cursor right if possible
-          if (cursorPositionRef.current < inputBufferRef.current.length) {
-            cursorPositionRef.current += 1;
-            // Echo cursor movement locally
-            term.write(data);
-          }
-        } else if (data === '\u001b[D') {
-          // Left arrow - move cursor left if possible
-          if (cursorPositionRef.current > 0) {
-            cursorPositionRef.current -= 1;
-            // Echo cursor movement locally
-            term.write(data);
-          }
-        } else if (data.length === 1 && data.charCodeAt(0) >= 32) {
-          // Printable character - add to buffer at cursor position
-          const newBuffer = inputBufferRef.current.substring(0, cursorPositionRef.current) +
-                           data +
-                           inputBufferRef.current.substring(cursorPositionRef.current);
-          console.log('Adding to input buffer:', data, 'New buffer:', newBuffer);
-          inputBufferRef.current = newBuffer;
-          setInputBuffer(newBuffer);
-          cursorPositionRef.current += 1;
-
-          // Echo the character locally so user can see what they're typing
-          term.write(data);
-        } else {
-          // Other control characters - pass directly to the server
-          socket.send(JSON.stringify({ type: 'control', data: Array.from(data).map(c => c.charCodeAt(0)) }));
-        }
       }
     });
   };
