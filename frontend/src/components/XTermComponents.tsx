@@ -19,9 +19,15 @@ export default function XTermComponents({
 }: XTermComponentsProps) {
   const xtermRef = useRef<XTerm | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
+  const inputBufferRef = useRef<string>('');
   const [inputBuffer, setInputBuffer] = useState('');
-  const [cursorPosition, setCursorPosition] = useState(0);
+  const cursorPositionRef = useRef<number>(0);
   const fitAddonRef = useRef<FitAddon | null>(null);
+
+  useEffect(() => {
+    // This effect is purely for debugging - helps track what's happening with the input buffer
+    console.log('Input buffer state updated:', inputBuffer);
+  }, [inputBuffer]);
 
   // Define connectWebSocket as a useCallback to avoid dependency issues
   const connectWebSocket = useCallback((term: XTerm) => {
@@ -70,14 +76,27 @@ export default function XTermComponents({
   }, [assessmentId, setIsConnected]);
 
   const setupTerminalDataHandler = (term: XTerm, socket: WebSocket) => {
+    // Reset input buffer and cursor position
+    inputBufferRef.current = '';
+    cursorPositionRef.current = 0;
+    setInputBuffer('');
+
     // Helper function to send a command to the server
     const sendCommand = (cmd: string) => {
       if (socket && socket.readyState === WebSocket.OPEN) {
         try {
-          // Explicitly format the command
-          const commandToSend = cmd + '\n';
-          console.log('Sending command:', JSON.stringify(commandToSend));
-          socket.send(commandToSend);
+          // Format the command as a JSON object to ensure proper handling on the backend
+          console.log('sendCommand received command:', cmd, typeof cmd, 'length:', cmd.length);
+
+          // Additional validation to ensure we're sending a string
+          const validatedCmd = typeof cmd === 'string' ? cmd : String(cmd);
+
+          const commandObject = {
+            type: "command",
+            command: validatedCmd
+          };
+          console.log('Sending JSON command:', JSON.stringify(commandObject));
+          socket.send(JSON.stringify(commandObject));
         } catch (e) {
           console.error('Error sending command:', e);
           term.writeln(`\r\nError sending command: ${e}`);
@@ -94,9 +113,10 @@ export default function XTermComponents({
         // Handle special keys and normal input differently
         if (data === '\r') {
           // Enter key - send the entire buffer to the server
-          if (inputBuffer.length > 0) {
+          if (inputBufferRef.current.length > 0) {
             // Store the current command before clearing the buffer
-            const commandToSend = inputBuffer;
+            const commandToSend = inputBufferRef.current;
+            console.log('Enter pressed, sending command:', commandToSend, 'Buffer length:', inputBufferRef.current.length);
 
             // Echo a newline locally
             term.write('\r\n');
@@ -106,8 +126,9 @@ export default function XTermComponents({
             sendCommand(commandToSend);
 
             // Now clear the buffer
+            inputBufferRef.current = '';
             setInputBuffer('');
-            setCursorPosition(0);
+            cursorPositionRef.current = 0;
           } else {
             // Empty buffer, just send a newline
             term.write('\r\n');
@@ -118,22 +139,24 @@ export default function XTermComponents({
           socket.send(JSON.stringify({ type: 'signal', signal: 'SIGINT' }));
           // Echo ^C locally
           term.write('^C\r\n');
+          inputBufferRef.current = '';
           setInputBuffer('');
-          setCursorPosition(0);
+          cursorPositionRef.current = 0;
         } else if (data === '\x04') {
           // Ctrl+D - send EOF
           socket.send('\x04');
         } else if (data === '\t') {
-          // Tab - send directly for tab completion
-          socket.send('\t');
+          // Tab - send for tab completion
+          socket.send(JSON.stringify({ type: 'special', key: 'tab' }));
         } else if (data === '\x7F') {
           // Backspace key
-          if (cursorPosition > 0) {
+          if (cursorPositionRef.current > 0) {
             // Remove the character before the cursor
-            const newBuffer = inputBuffer.substring(0, cursorPosition - 1) +
-                              inputBuffer.substring(cursorPosition);
+            const newBuffer = inputBufferRef.current.substring(0, cursorPositionRef.current - 1) +
+                              inputBufferRef.current.substring(cursorPositionRef.current);
+            inputBufferRef.current = newBuffer;
             setInputBuffer(newBuffer);
-            setCursorPosition(prevPos => Math.max(0, prevPos - 1));
+            cursorPositionRef.current = Math.max(0, cursorPositionRef.current - 1);
 
             // Echo the backspace (move cursor back, clear character, move cursor back again)
             term.write('\b \b');
@@ -141,36 +164,38 @@ export default function XTermComponents({
         } else if (data === '\u001b[A') {
           // Up arrow - could implement history here
           // For now, just pass to server
-          socket.send(data);
+          socket.send(JSON.stringify({ type: 'special', key: 'up_arrow' }));
         } else if (data === '\u001b[B') {
           // Down arrow - could implement history here
           // For now, just pass to server
-          socket.send(data);
+          socket.send(JSON.stringify({ type: 'special', key: 'down_arrow' }));
         } else if (data === '\u001b[C') {
           // Right arrow - move cursor right if possible
-          if (cursorPosition < inputBuffer.length) {
-            setCursorPosition(prevPos => prevPos + 1);
+          if (cursorPositionRef.current < inputBufferRef.current.length) {
+            cursorPositionRef.current += 1;
             term.write(data); // Echo the cursor movement
           }
         } else if (data === '\u001b[D') {
           // Left arrow - move cursor left if possible
-          if (cursorPosition > 0) {
-            setCursorPosition(prevPos => prevPos - 1);
+          if (cursorPositionRef.current > 0) {
+            cursorPositionRef.current -= 1;
             term.write(data); // Echo the cursor movement
           }
         } else if (data.length === 1 && data.charCodeAt(0) >= 32) {
           // Printable character - add to buffer at cursor position
-          const newBuffer = inputBuffer.substring(0, cursorPosition) +
+          const newBuffer = inputBufferRef.current.substring(0, cursorPositionRef.current) +
                            data +
-                           inputBuffer.substring(cursorPosition);
+                           inputBufferRef.current.substring(cursorPositionRef.current);
+          console.log('Adding to input buffer:', data, 'New buffer:', newBuffer);
+          inputBufferRef.current = newBuffer;
           setInputBuffer(newBuffer);
-          setCursorPosition(prevPos => prevPos + 1);
+          cursorPositionRef.current += 1;
 
           // Echo the character
           term.write(data);
         } else {
           // Other control characters - pass directly to the server
-          socket.send(data);
+          socket.send(JSON.stringify({ type: 'control', data: Array.from(data).map(c => c.charCodeAt(0)) }));
         }
       }
     });

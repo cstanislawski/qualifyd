@@ -311,6 +311,8 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 			Type       string `json:"type"`
 			Command    string `json:"command"`
 			Signal     string `json:"signal"`
+			Key        string `json:"key"`
+			Data       []int  `json:"data"`
 			Dimensions struct {
 				Cols int `json:"cols"`
 				Rows int `json:"rows"`
@@ -352,6 +354,31 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 							log.Printf("Failed to resize terminal: %v", err)
 						}
 					}
+				}
+				continue
+			} else if cmd.Type == "special" {
+				// Handle special keys
+				log.Printf("Received special key: %s", cmd.Key)
+				switch cmd.Key {
+				case "tab":
+					t.stdin.Write([]byte{9}) // Tab character
+				case "up_arrow":
+					t.stdin.Write([]byte{27, 91, 65}) // ESC [ A
+				case "down_arrow":
+					t.stdin.Write([]byte{27, 91, 66}) // ESC [ B
+				default:
+					log.Printf("Unknown special key: %s", cmd.Key)
+				}
+				continue
+			} else if cmd.Type == "control" {
+				// Handle raw control characters
+				log.Printf("Received control data: %v", cmd.Data)
+				if len(cmd.Data) > 0 {
+					bytes := make([]byte, len(cmd.Data))
+					for i, code := range cmd.Data {
+						bytes[i] = byte(code)
+					}
+					t.stdin.Write(bytes)
 				}
 				continue
 			}
