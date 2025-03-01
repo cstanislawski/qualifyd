@@ -2,9 +2,7 @@
 const nextConfig = {
   output: 'standalone',
   // Properly handle code that should only run in the browser
-  experimental: {
-    serverComponentsExternalPackages: [],
-  },
+  serverExternalPackages: [],
   webpack: (config, { isServer }) => {
     // Fixes npm packages that depend on browser-only globals like window
     if (isServer) {

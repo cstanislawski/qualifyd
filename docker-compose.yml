@@ -11,16 +11,16 @@ services:
     environment:
       - NEXT_PUBLIC_WS_HOST=localhost:8080
     depends_on:
-      - app
+      - backend
     networks:
       - qualifyd-network
     restart: unless-stopped
 
-  app:
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: qualifyd-app
+    container_name: qualifyd-backend
     ports:
       - "8080:8080"
     environment:
