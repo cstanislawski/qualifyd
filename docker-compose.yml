@@ -1,5 +1,4 @@
 services:
-  # Main application service
   app:
     build:
       context: .
@@ -25,7 +24,6 @@ services:
       - qualifyd-network
     restart: unless-stopped
 
-  # Terminal service for candidate assessments
   terminal:
     build:
       context: .
@@ -36,14 +34,11 @@ services:
     networks:
       - qualifyd-network
     restart: unless-stopped
-    # For security in production, consider removing this port mapping
-    # and only allowing access through the app service
     ports:
       - "2222:22"
 
-  # Database service
   db:
-    image: postgres:15-alpine
+    image: postgres:17
     container_name: qualifyd-db
     environment:
       - POSTGRES_USER=postgres
@@ -54,7 +49,6 @@ services:
     networks:
       - qualifyd-network
     restart: unless-stopped
-    # For development only, consider removing this port mapping in production
     ports:
       - "5432:5432"
 
