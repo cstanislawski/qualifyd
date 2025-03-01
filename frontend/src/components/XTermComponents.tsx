@@ -118,8 +118,8 @@ export default function XTermComponents({
             const commandToSend = inputBufferRef.current;
             console.log('Enter pressed, sending command:', commandToSend, 'Buffer length:', inputBufferRef.current.length);
 
-            // Echo a newline locally
-            term.write('\r\n');
+            // Don't echo a newline locally - let the server response handle this
+            // term.write('\r\n');  <-- Remove this line to fix the double newline issue
 
             // Send the command to the server - use the stored command, not the potentially cleared buffer
             console.log('Sending command:', commandToSend);
@@ -130,8 +130,8 @@ export default function XTermComponents({
             setInputBuffer('');
             cursorPositionRef.current = 0;
           } else {
-            // Empty buffer, just send a newline
-            term.write('\r\n');
+            // Empty buffer, just send a newline without echoing locally
+            // term.write('\r\n');  <-- Remove this line as well
             sendCommand('');
           }
         } else if (data === '\x03') {
