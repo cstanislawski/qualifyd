@@ -158,8 +158,8 @@ export default function XTermComponents({
             setInputBuffer(newBuffer);
             cursorPositionRef.current = Math.max(0, cursorPositionRef.current - 1);
 
-            // Echo the backspace (move cursor back, clear character, move cursor back again)
-            term.write('\b \b');
+            // Echo the backspace locally
+            term.write('\b \b'); // Move cursor back, clear character, move cursor back again
           }
         } else if (data === '\u001b[A') {
           // Up arrow - could implement history here
@@ -173,13 +173,15 @@ export default function XTermComponents({
           // Right arrow - move cursor right if possible
           if (cursorPositionRef.current < inputBufferRef.current.length) {
             cursorPositionRef.current += 1;
-            term.write(data); // Echo the cursor movement
+            // Echo cursor movement locally
+            term.write(data);
           }
         } else if (data === '\u001b[D') {
           // Left arrow - move cursor left if possible
           if (cursorPositionRef.current > 0) {
             cursorPositionRef.current -= 1;
-            term.write(data); // Echo the cursor movement
+            // Echo cursor movement locally
+            term.write(data);
           }
         } else if (data.length === 1 && data.charCodeAt(0) >= 32) {
           // Printable character - add to buffer at cursor position
@@ -191,7 +193,7 @@ export default function XTermComponents({
           setInputBuffer(newBuffer);
           cursorPositionRef.current += 1;
 
-          // Echo the character
+          // Echo the character locally so user can see what they're typing
           term.write(data);
         } else {
           // Other control characters - pass directly to the server

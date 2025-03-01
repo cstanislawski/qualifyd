@@ -191,12 +191,12 @@ func (t *Terminal) connectSSH() error {
 	t.sshSession = session
 
 	// Set up terminal modes
-	// ECHO: echo input characters
+	// ECHO: echo input characters (turned off because we're echoing locally in the frontend)
 	// ICRNL: translate CR to NL on input (for proper command execution)
 	// ISIG: enable signals (Ctrl+C, etc.)
 	// ICANON: enable canonical mode (line-by-line input processing)
 	modes := ssh.TerminalModes{
-		ssh.ECHO:          1, // Echo on
+		ssh.ECHO:          0, // Echo off - we're handling echo in the frontend
 		ssh.IGNCR:         0, // Don't ignore CR on input
 		ssh.ICRNL:         1, // Map CR to NL on input
 		ssh.INLCR:         0, // Don't map NL to CR on input
