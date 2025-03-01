@@ -93,6 +93,57 @@ often have limitations, such as:
 
 Qualifyd addresses these limitations by providing realistic, configurable environments that accurately simulate job responsibilities for infrastructure, platform engineering, and DevOps roles - aiming at improving the evaluation accuracy, being transparent about typical technical challenges encountered in the job, and providing a better experience for candidates and reviewers.
 
+## Pricing
+
+### Plans
+
+| Feature | Starter | Team | Enterprise |
+|---------|---------|------|------------|
+| Price | $100/month | $200/month | Custom |
+| Assessments per month | Up to 10 | Up to 40 | Unlimited |
+| Team members | Up to 5 | ∞ | ∞ |
+| Custom templates | 5 | 20 | Unlimited |
+| Concurrent environments | 3 | 10 | Configurable |
+| Included environment minutes/month (2cpu/4gb/50gb as baseline)* | 900 | 3600 | Configurable |
+| Overage rate (2cpu/4gb/50gb as baseline) | $0.20/min | $0.15/min | $0.10/min |
+| Custom machine sizes | - | ✓ | ✓ |
+| Environment runtime | Up to 2 hours | Up to 8 hours | Configurable |
+| Snapshot storage | Up to 7 days | Up to 30 days | Configurable |
+| Internet access for environments | ✓ | ✓ | ✓ |
+| RBAC | Basic | Custom | Custom |
+| Priority support (Slack, Teams, Email...) | - | ✓ | ✓ |
+| Automatic scoring | - | ✓ | ✓ |
+| Custom machine images | - | - | ✓ |
+| SLA | 95% | 99.5% | 99.9% |
+
+The offer does not match your needs? Contact us and we'll work something out!
+
+* - does not include the startup time of the environment
+
+(not final, just a placeholder/proposal)
+
+### Additional Resources
+
+All plans include:
+
+- Basic templates library
+- Candidate feedback tools
+- SSO integration
+- Dedicated support
+
+### Enterprise Features
+
+For organizations with specific requirements, our Enterprise plan offers:
+
+- Custom environment configurations
+- Scenario preparation
+- Volume discounts
+- Advanced RBAC
+- Priority support
+- Custom integrations
+
+Need custom features? Contact us and figure it out!
+
 ## Project Status
 
 This project is in early development, and the name "Qualifyd" is provisional. Alternative names under consideration:
