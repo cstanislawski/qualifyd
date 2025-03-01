@@ -152,3 +152,21 @@ This project is in early development, and the name "Qualifyd" is provisional. Al
 - TrueEnv
 - Worklike
 - RealCheck
+
+## Infrastructure Setup
+
+For the MVP, we need to have:
+
+- Frontend
+- Backend
+- Database
+- Queue system - later on
+
+The infrastructure should be deployed in GCP's GKE. The environments users will be using should be deployed via `KubeVirt`, which will deploy the virtual machines in the same GKE cluster.
+
+Technology stack:
+
+- Frontend: rendered in the backend, with the terminal streamed to the frontend
+- Backend: Go + [Chi](https://github.com/go-chi/chi) for the API + [jackc/pgx](https://github.com/jackc/pgx) for the database + [gorilla/websocket](https://github.com/gorilla/websocket) for the websocket connection (streaming the terminal) + HTML template for the frontend
+- Database: PostgreSQL
+- Queue system: TBD
