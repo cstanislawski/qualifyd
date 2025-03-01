@@ -2,6 +2,8 @@
 
 import { useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
 
 // Dynamically import xterm.js components with ssr:false to prevent 'self is not defined' errors
 const XTermComponents = dynamic(
@@ -19,21 +21,28 @@ export default function Terminal({ assessmentId }: TerminalProps) {
 
   // Render only the terminal container in SSR
   return (
-    <div className="h-full flex flex-col bg-gray-900 rounded-md overflow-hidden">
-      <div className="p-2 bg-gray-800 text-white text-sm flex justify-between items-center">
-        <div>
-          <span className="font-bold">Assessment ID: </span>
-          <span>{assessmentId}</span>
-          <span className="ml-4">
-            Status:
-            <span className={`ml-1 ${isConnected ? 'text-green-400' : 'text-red-400'}`}>
+    <div className="h-full flex flex-col bg-zinc-900 rounded-md overflow-hidden border border-zinc-800">
+      <div className="p-2 bg-zinc-800 text-zinc-300 text-sm flex justify-between items-center border-b border-zinc-700">
+        <div className="flex items-center gap-4">
+          <div>
+            <span className="font-mono">Assessment ID: </span>
+            <span className="font-mono">{assessmentId}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span>Status:</span>
+            <Badge
+              variant={isConnected ? "success" : "destructive"}
+              className="font-mono"
+            >
               {isConnected ? 'Connected' : 'Disconnected'}
-            </span>
-          </span>
+            </Badge>
+          </div>
         </div>
-        <div className="flex space-x-2">
-          <button
-            className="px-2 py-1 bg-blue-600 text-white rounded text-xs"
+        <div>
+          <Button
+            variant="secondary"
+            size="sm"
+            className="text-xs font-mono bg-zinc-700 hover:bg-zinc-600 text-zinc-200"
             onClick={() => {
               if (typeof window !== 'undefined') {
                 // This will be handled by the client component
@@ -42,7 +51,7 @@ export default function Terminal({ assessmentId }: TerminalProps) {
             }}
           >
             Clear
-          </button>
+          </Button>
         </div>
       </div>
       {/* Terminal container */}

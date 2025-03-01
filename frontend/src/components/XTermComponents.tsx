@@ -57,12 +57,12 @@ export default function XTermComponents({
 
     socket.onclose = () => {
       setIsConnected(false);
-      term.writeln('Disconnected from terminal.');
+      term.writeln('\r\nDisconnected from terminal.');
     };
 
     socket.onerror = (error) => {
       setIsConnected(false);
-      term.writeln(`Error connecting to terminal server. Please try again later.`);
+      term.writeln(`\r\nError connecting to terminal server. Please try again later.`);
       console.error('WebSocket error:', error);
     };
   }, [assessmentId, setIsConnected]);
@@ -94,10 +94,31 @@ export default function XTermComponents({
     const term = new XTerm({
       cursorBlink: true,
       theme: {
-        background: '#202124',
-        foreground: '#f8f9fa',
-        cursor: '#f8f9fa',
+        background: '#18181b', // zinc-950 equivalent
+        foreground: '#e4e4e7', // zinc-200 equivalent
+        cursor: '#a1a1aa',     // zinc-400 equivalent
+        selectionBackground: '#3f3f46', // zinc-700 equivalent
+        black: '#09090b',      // zinc-950 darker
+        red: '#ef4444',        // red-500
+        green: '#22c55e',      // green-500
+        yellow: '#eab308',     // yellow-500
+        blue: '#3b82f6',       // blue-500
+        magenta: '#d946ef',    // fuchsia-500
+        cyan: '#06b6d4',       // cyan-500
+        white: '#f4f4f5',      // zinc-100
+        brightBlack: '#27272a', // zinc-800
+        brightRed: '#f87171',  // red-400
+        brightGreen: '#4ade80',// green-400
+        brightYellow: '#facc15',// yellow-400
+        brightBlue: '#60a5fa', // blue-400
+        brightMagenta: '#e879f9',// fuchsia-400
+        brightCyan: '#22d3ee', // cyan-400
+        brightWhite: '#fafafa', // zinc-50
       },
+      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+      fontSize: 14,
+      letterSpacing: 0,
+      lineHeight: 1.2,
     });
     xtermRef.current = term;
 
