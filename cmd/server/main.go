@@ -50,6 +50,73 @@ func main() {
 		r.Get("/terminal/{id}", terminalHandler)
 	})
 
+	// Test route for terminal connection
+	r.Get("/test-terminal", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		html := `
+		<!DOCTYPE html>
+		<html>
+		<head>
+			<title>Terminal Test</title>
+			<style>
+				#terminal {
+					width: 100%;
+					height: 400px;
+					background-color: #000;
+					color: #fff;
+					font-family: monospace;
+					padding: 10px;
+					overflow-y: auto;
+				}
+				#input {
+					width: 100%;
+					padding: 5px;
+					font-family: monospace;
+				}
+			</style>
+		</head>
+		<body data-assessment-id="test">
+			<h1>Terminal Test</h1>
+			<div id="terminal"></div>
+			<input id="input" type="text" placeholder="Enter command..." />
+
+			<script>
+				const terminal = document.getElementById('terminal');
+				const input = document.getElementById('input');
+				const ws = new WebSocket('ws://' + window.location.host + '/ws/terminal/test');
+
+				ws.onopen = () => {
+					terminal.innerHTML += 'Connected to terminal.<br>';
+				};
+
+				ws.onmessage = (event) => {
+					terminal.innerHTML += '<span style="color: #0f0;">' + event.data + '</span><br>';
+					terminal.scrollTop = terminal.scrollHeight;
+				};
+
+				ws.onclose = () => {
+					terminal.innerHTML += 'Disconnected from terminal.<br>';
+				};
+
+				ws.onerror = (error) => {
+					terminal.innerHTML += '<span style="color: #f00;">Error: ' + error.message + '</span><br>';
+				};
+
+				input.addEventListener('keydown', (e) => {
+					if (e.key === 'Enter') {
+						const command = input.value;
+						terminal.innerHTML += '$ ' + command + '<br>';
+						ws.send(command);
+						input.value = '';
+					}
+				});
+			</script>
+		</body>
+		</html>
+		`
+		w.Write([]byte(html))
+	})
+
 	// WebSocket routes
 	r.Get("/ws/terminal/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
@@ -119,7 +186,9 @@ func assessmentsListHandler(w http.ResponseWriter, r *http.Request) {
 func terminalHandler(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	data := map[string]interface{}{
-		"AssessmentID": id,
+		"AssessmentID":    id,
+		"AssessmentTitle": "Kubernetes Troubleshooting",
+		"TimeRemaining":   "01:30:00",
 	}
 	renderTemplate(w, "candidate/terminal", data)
 }

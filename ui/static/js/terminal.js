@@ -7,6 +7,8 @@
 
 class QualifydTerminal {
   constructor(options = {}) {
+    console.log("Initializing QualifydTerminal with options:", options);
+
     // Default configuration
     this.config = {
       terminalId: 'terminal',
@@ -15,6 +17,8 @@ class QualifydTerminal {
       historySize: 50,
       ...options
     };
+
+    console.log("Terminal configuration:", this.config);
 
     // Terminal state
     this.history = [];
@@ -26,7 +30,16 @@ class QualifydTerminal {
 
     // DOM elements
     this.terminalElement = document.getElementById(this.config.terminalId);
+    if (!this.terminalElement) {
+      console.error(`Terminal element with ID '${this.config.terminalId}' not found!`);
+      return;
+    }
+
     this.terminalBody = this.terminalElement.querySelector('.terminal-body');
+    if (!this.terminalBody) {
+      console.error(`Terminal body element not found within terminal element!`);
+      return;
+    }
 
     // Initialize
     this.init();
@@ -36,6 +49,7 @@ class QualifydTerminal {
    * Initialize the terminal
    */
   init() {
+    console.log("Initializing terminal...");
     this.createPromptLine();
     this.connectWebSocket();
     this.setupEventListeners();
@@ -53,6 +67,7 @@ Type 'help' for available commands.
    * Create a new prompt line in the terminal
    */
   createPromptLine() {
+    console.log("Creating prompt line...");
     const promptLine = document.createElement('div');
     promptLine.className = 'terminal-prompt';
     promptLine.innerHTML = `${this.currentPrompt} `;
@@ -75,6 +90,7 @@ Type 'help' for available commands.
    * Add output text to the terminal
    */
   addOutput(text, className = '') {
+    console.log("Adding output:", text.substring(0, 50) + (text.length > 50 ? '...' : ''));
     const output = document.createElement('div');
     output.className = `terminal-output ${className}`;
     output.textContent = text;
@@ -90,6 +106,8 @@ Type 'help' for available commands.
   processCommand(command) {
     if (!command.trim()) return;
 
+    console.log("Processing command:", command);
+
     // Add to history
     this.history.unshift(command);
     if (this.history.length > this.config.historySize) {
@@ -102,11 +120,13 @@ Type 'help' for available commands.
 
     // Send command to server via WebSocket
     if (this.connected) {
+      console.log("Sending command to WebSocket:", command);
       this.socket.send(JSON.stringify({
         type: 'command',
         command: command
       }));
     } else {
+      console.warn("WebSocket not connected, using fallback handler");
       // Fallback for when WebSocket is not connected
       this.handleOfflineCommand(command);
     }
@@ -143,6 +163,7 @@ Note: The terminal is currently in offline mode. Some commands may not work.
    * Clear the terminal
    */
   clearTerminal() {
+    console.log("Clearing terminal...");
     // Remove all children except the last prompt line
     while (this.terminalBody.childNodes.length > 1) {
       this.terminalBody.removeChild(this.terminalBody.firstChild);
@@ -157,14 +178,18 @@ Note: The terminal is currently in offline mode. Some commands may not work.
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${protocol}//${window.location.host}${this.config.wsEndpoint}`;
 
+      console.log("Connecting to WebSocket:", wsUrl);
+
       this.socket = new WebSocket(wsUrl);
 
       this.socket.onopen = () => {
+        console.log("WebSocket connection established");
         this.connected = true;
         this.addOutput('Connected to assessment environment.', 'terminal-output-success');
       };
 
       this.socket.onmessage = (event) => {
+        console.log("WebSocket message received:", event.data.substring(0, 50) + (event.data.length > 50 ? '...' : ''));
         try {
           const data = JSON.parse(event.data);
 
@@ -184,7 +209,8 @@ Note: The terminal is currently in offline mode. Some commands may not work.
         }
       };
 
-      this.socket.onclose = () => {
+      this.socket.onclose = (event) => {
+        console.warn("WebSocket connection closed:", event.code, event.reason);
         this.connected = false;
         this.addOutput('Disconnected from assessment environment. Type "connect" to reconnect.', 'terminal-output-warning');
         this.createPromptLine();
@@ -207,6 +233,7 @@ Note: The terminal is currently in offline mode. Some commands may not work.
    * Update the current path in the prompt
    */
   updatePath(path) {
+    console.log("Updating path to:", path);
     this.currentPath = path;
     this.currentPrompt = this.config.promptTemplate.replace('<span class="terminal-prompt-path">~</span>', `<span class="terminal-prompt-path">${path}</span>`);
   }
@@ -215,6 +242,7 @@ Note: The terminal is currently in offline mode. Some commands may not work.
    * Set up event listeners for the terminal
    */
   setupEventListeners() {
+    console.log("Setting up event listeners...");
     // Click anywhere in terminal to focus the input
     this.terminalBody.addEventListener('click', () => {
       this.focusTerminal();
@@ -287,6 +315,7 @@ Note: The terminal is currently in offline mode. Some commands may not work.
    * Handle Ctrl+C key combination
    */
   handleCtrlC() {
+    console.log("Ctrl+C pressed");
     this.addOutput('^C');
     this.createPromptLine();
 
@@ -320,6 +349,8 @@ Note: The terminal is currently in offline mode. Some commands may not work.
  */
 class AssessmentTimer {
   constructor(options = {}) {
+    console.log("Initializing AssessmentTimer with options:", options);
+
     this.config = {
       elementId: 'assessment-timer',
       durationMinutes: 60,
@@ -330,24 +361,30 @@ class AssessmentTimer {
     };
 
     this.timerElement = document.getElementById(this.config.elementId);
+    if (!this.timerElement) {
+      console.error(`Timer element with ID '${this.config.elementId}' not found!`);
+      return;
+    }
+
     this.remainingSeconds = this.config.durationMinutes * 60;
     this.interval = null;
 
-    if (this.timerElement) {
-      this.init();
-    }
+    this.init();
   }
 
   init() {
+    console.log("Initializing timer...");
     this.updateDisplay();
     this.start();
   }
 
   start() {
+    console.log("Starting timer...");
     this.interval = setInterval(() => {
       this.remainingSeconds--;
 
       if (this.remainingSeconds <= 0) {
+        console.log("Timer completed");
         this.stop();
         if (typeof this.config.onComplete === 'function') {
           this.config.onComplete();
@@ -359,6 +396,7 @@ class AssessmentTimer {
   }
 
   stop() {
+    console.log("Stopping timer...");
     clearInterval(this.interval);
   }
 
@@ -386,18 +424,32 @@ class AssessmentTimer {
 
 // Initialize when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
+  console.log("DOM fully loaded, initializing terminal...");
+
   // Get assessment ID from the page
   const assessmentId = document.body.dataset.assessmentId;
+  console.log("Assessment ID from data attribute:", assessmentId);
+
+  if (!assessmentId) {
+    console.error("No assessment ID found in data-assessment-id attribute on body tag!");
+    // Try to extract from URL as fallback
+    const urlMatch = window.location.pathname.match(/\/terminal\/([^\/]+)/);
+    if (urlMatch && urlMatch[1]) {
+      console.log("Extracted assessment ID from URL:", urlMatch[1]);
+      document.body.dataset.assessmentId = urlMatch[1];
+    }
+  }
 
   // Initialize terminal
   const terminal = new QualifydTerminal({
-    assessmentId: assessmentId
+    assessmentId: document.body.dataset.assessmentId
   });
 
   // Initialize timer
   const timer = new AssessmentTimer({
     durationMinutes: parseInt(document.body.dataset.assessmentDuration || '60', 10),
     onComplete: function() {
+      console.log("Timer complete callback triggered");
       terminal.addOutput('\nTime is up! Your assessment has ended.', 'terminal-output-error');
 
       // Show submission dialog
@@ -419,7 +471,7 @@ document.addEventListener('DOMContentLoaded', function() {
         submitButton.innerHTML = '<svg class="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Submitting...';
 
         // Submit the assessment
-        fetch(`/api/assessments/${assessmentId}/submit`, {
+        fetch(`/api/assessments/${document.body.dataset.assessmentId}/submit`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -428,7 +480,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
           if (data.success) {
-            window.location.href = `/candidate/assessments/${assessmentId}/submitted`;
+            window.location.href = `/candidate/assessments/${document.body.dataset.assessmentId}/submitted`;
           } else {
             alert('Failed to submit assessment: ' + (data.message || 'Unknown error'));
             submitButton.disabled = false;

@@ -36,7 +36,6 @@ COPY ui/ ./ui/
 
 # Set environment variables
 ENV PORT=8080
-ENV GIN_MODE=release
 
 # Expose the application port
 EXPOSE 8080
