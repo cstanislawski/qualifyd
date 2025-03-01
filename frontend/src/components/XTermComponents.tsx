@@ -20,6 +20,7 @@ export default function XTermComponents({
   const xtermRef = useRef<XTerm | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const [inputBuffer, setInputBuffer] = useState('');
+  const [cursorPosition, setCursorPosition] = useState(0);
   const fitAddonRef = useRef<FitAddon | null>(null);
 
   // Define connectWebSocket as a useCallback to avoid dependency issues
@@ -60,23 +61,67 @@ export default function XTermComponents({
     // Handle keyboard input from terminal
     term.onData((data) => {
       if (socket && socket.readyState === WebSocket.OPEN) {
-        // Don't echo locally - server will handle echoing
-
-        // Send all keystrokes directly to the server
-        socket.send(data);
-
-        // Still track Enter key for buffer clearing
+        // Handle special keys and normal input differently
         if (data === '\r') {
-          // Clear the buffer on Enter
-          setInputBuffer('');
-        } else if (data === '\x7F') {
-          // Track backspace in our buffer
+          // Enter key - send the entire buffer to the server
           if (inputBuffer.length > 0) {
-            setInputBuffer(prev => prev.slice(0, -1));
+            // Echo a newline locally
+            term.write('\r\n');
+
+            // Send the command to the server
+            socket.send(inputBuffer + '\r');
+            setInputBuffer('');
+            setCursorPosition(0);
+          } else {
+            // Empty buffer, just send a newline
+            term.write('\r\n');
+            socket.send('\r');
           }
+        } else if (data === '\x7F') {
+          // Backspace key
+          if (cursorPosition > 0) {
+            // Remove the character before the cursor
+            const newBuffer = inputBuffer.substring(0, cursorPosition - 1) +
+                              inputBuffer.substring(cursorPosition);
+            setInputBuffer(newBuffer);
+            setCursorPosition(prevPos => Math.max(0, prevPos - 1));
+
+            // Echo the backspace (move cursor back, clear character, move cursor back again)
+            term.write('\b \b');
+          }
+        } else if (data === '\u001b[A') {
+          // Up arrow - could implement history here
+          // For now, just pass to server
+          socket.send(data);
+        } else if (data === '\u001b[B') {
+          // Down arrow - could implement history here
+          // For now, just pass to server
+          socket.send(data);
+        } else if (data === '\u001b[C') {
+          // Right arrow - move cursor right if possible
+          if (cursorPosition < inputBuffer.length) {
+            setCursorPosition(prevPos => prevPos + 1);
+            term.write(data); // Echo the cursor movement
+          }
+        } else if (data === '\u001b[D') {
+          // Left arrow - move cursor left if possible
+          if (cursorPosition > 0) {
+            setCursorPosition(prevPos => prevPos - 1);
+            term.write(data); // Echo the cursor movement
+          }
+        } else if (data.length === 1 && data.charCodeAt(0) >= 32) {
+          // Printable character - add to buffer at cursor position
+          const newBuffer = inputBuffer.substring(0, cursorPosition) +
+                           data +
+                           inputBuffer.substring(cursorPosition);
+          setInputBuffer(newBuffer);
+          setCursorPosition(prevPos => prevPos + 1);
+
+          // Echo the character
+          term.write(data);
         } else {
-          // Track character in our buffer
-          setInputBuffer(prev => prev + data);
+          // Other control characters - pass directly to the server
+          socket.send(data);
         }
       }
     });

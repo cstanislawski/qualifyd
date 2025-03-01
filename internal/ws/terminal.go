@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -314,7 +315,12 @@ func (t *Terminal) readPump(hub *TerminalHub) {
 
 		// Send the command to the SSH session
 		if t.stdin != nil {
-			t.stdin.Write([]byte(command + "\n"))
+			// Check if the command already ends with a newline character
+			// and only add one if it doesn't already have one
+			if len(command) > 0 && !strings.HasSuffix(command, "\n") && !strings.HasSuffix(command, "\r") {
+				command += "\n"
+			}
+			t.stdin.Write([]byte(command))
 		}
 	}
 }
