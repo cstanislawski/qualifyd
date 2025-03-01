@@ -21,7 +21,7 @@ export default function Terminal({ assessmentId }: TerminalProps) {
 
   // Render only the terminal container in SSR
   return (
-    <div className="h-full flex flex-col bg-zinc-900 rounded-md overflow-hidden border border-zinc-800">
+    <div className="h-full flex flex-col bg-zinc-900 overflow-hidden">
       <div className="p-2 bg-zinc-800 text-zinc-300 text-sm flex justify-between items-center border-b border-zinc-700">
         <div className="flex items-center gap-4">
           <div>

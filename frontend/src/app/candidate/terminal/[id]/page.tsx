@@ -74,12 +74,12 @@ Use standard kubectl commands to diagnose and fix the problems.
 
   return (
     <div
-      className="h-[calc(100vh-4rem)] bg-zinc-950 p-4"
+      className="h-[calc(100vh-64px-40px)] bg-zinc-950"
       onMouseMove={onResize}
       onMouseUp={stopResizing}
       onMouseLeave={stopResizing}
     >
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between px-4 h-14 bg-zinc-900 border-b border-zinc-800">
         <h1 className="text-xl font-semibold text-zinc-100">{assessmentDetails.title}</h1>
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-zinc-400">Time Remaining:</span>
@@ -91,7 +91,7 @@ Use standard kubectl commands to diagnose and fix the problems.
 
       <div
         id="resize-container"
-        className="h-[calc(100%-3rem)] bg-zinc-900 rounded-lg border border-zinc-800 overflow-hidden flex"
+        className="h-[calc(100%-56px)] bg-zinc-900 overflow-hidden flex"
       >
         {/* Left Panel - Instructions */}
         <div
