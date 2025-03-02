@@ -14,17 +14,83 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="mt-10 max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold text-zinc-100">
+          <div className="mt-12 max-w-4xl mx-auto">
+            <h2 className="text-2xl font-bold text-zinc-100 text-center mb-8">
               Place candidates in practical testing scenarios
             </h2>
-            <ul className="mt-4 ml-6 list-disc text-zinc-300">
-              <li className="mt-2">Troubleshooting Kubernetes configuration issues</li>
-              <li className="mt-2">Diagnosing and resolving Linux server problems</li>
-              <li className="mt-2">Creating docker-compose configurations for new services</li>
-              <li className="mt-2">Writing Terraform configurations for cloud infrastructure</li>
-              <li className="mt-2">And many more job-specific technical challenges</li>
-            </ul>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Kubernetes Scenario Card */}
+              <div className="bg-zinc-800/50 rounded-xl p-6 border border-zinc-700 hover:border-indigo-500 transition-all hover:shadow-md hover:shadow-indigo-500/10 group">
+                <div className="flex items-start">
+                  <div className="bg-indigo-500/10 p-3 rounded-lg mr-4 group-hover:bg-indigo-500/20 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-zinc-100 mb-2">Kubernetes Configuration</h3>
+                    <p className="text-zinc-400">Troubleshoot real-world Kubernetes configuration issues and apply best practices to resolve them.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Linux Server Card */}
+              <div className="bg-zinc-800/50 rounded-xl p-6 border border-zinc-700 hover:border-indigo-500 transition-all hover:shadow-md hover:shadow-indigo-500/10 group">
+                <div className="flex items-start">
+                  <div className="bg-indigo-500/10 p-3 rounded-lg mr-4 group-hover:bg-indigo-500/20 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 21v-13a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v13"></path>
+                      <line x1="9" y1="5" x2="15" y2="5"></line>
+                      <line x1="12" y1="5" x2="12" y2="21"></line>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-zinc-100 mb-2">Linux Server Problems</h3>
+                    <p className="text-zinc-400">Diagnose and resolve complex Linux server issues ranging from performance bottlenecks to system failures.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Docker Compose Card */}
+              <div className="bg-zinc-800/50 rounded-xl p-6 border border-zinc-700 hover:border-indigo-500 transition-all hover:shadow-md hover:shadow-indigo-500/10 group">
+                <div className="flex items-start">
+                  <div className="bg-indigo-500/10 p-3 rounded-lg mr-4 group-hover:bg-indigo-500/20 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M22 12.5a2.5 2.5 0 0 0-2.5-2.5h-7A2.5 2.5 0 0 0 10 12.5a2.5 2.5 0 0 0 2.5 2.5h7a2.5 2.5 0 0 0 2.5-2.5z"></path>
+                      <path d="M8 18a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path>
+                      <path d="M4 15v-3a6 6 0 0 1 6-6h3"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-zinc-100 mb-2">Docker Configurations</h3>
+                    <p className="text-zinc-400">Create and optimize docker-compose configurations for deploying interconnected services with proper networking.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Terraform Card */}
+              <div className="bg-zinc-800/50 rounded-xl p-6 border border-zinc-700 hover:border-indigo-500 transition-all hover:shadow-md hover:shadow-indigo-500/10 group">
+                <div className="flex items-start">
+                  <div className="bg-indigo-500/10 p-3 rounded-lg mr-4 group-hover:bg-indigo-500/20 transition-all">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5"></path>
+                      <path d="M2 12l10 5 10-5"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-zinc-100 mb-2">Terraform Infrastructure</h3>
+                    <p className="text-zinc-400">Write and troubleshoot Terraform configurations to provision cloud infrastructure following best practices.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 text-center">
+              <p className="text-indigo-400 font-medium">
+                And many more job-specific technical challenges tailored to your needs
+              </p>
+            </div>
           </div>
 
           <div className="mt-12 sm:flex sm:justify-center">

@@ -127,7 +127,7 @@ Qualifyd addresses these limitations by providing realistic, configurable enviro
 | Priority support (Slack, Teams, Email...) | - | ✓ | ✓ |
 | Automatic scoring | - | ✓ | ✓ |
 | Custom machine images | - | - | ✓ |
-| SLA | 98% | 99.5% | 99.9% |
+| SLA | 99% | 99.5% | 99.9% |
 
 The offer does not match your needs? Contact us and we'll work something out!
 
