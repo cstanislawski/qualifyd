@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'My Assessments - Qualifyd',
+  title: 'Assessments - Qualifyd',
 };
 
 export default function AssessmentsPage() {
@@ -40,7 +40,7 @@ export default function AssessmentsPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-zinc-100">My Assessments</h1>
+        <h1 className="text-2xl font-bold text-zinc-100">Assessments</h1>
         <p className="mt-1 max-w-2xl text-sm text-zinc-400">View your scheduled and completed technical assessments.</p>
       </div>
 
