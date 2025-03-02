@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import RolesCarousel from '../components/RolesCarousel';
 
 export default function Home() {
   return (
@@ -105,6 +106,9 @@ export default function Home() {
         </div>
       </div>
 
+      {/* Roles Carousel Section */}
+      <RolesCarousel />
+
       <div className="mt-8 bg-zinc-900 overflow-hidden shadow rounded-lg border border-zinc-800">
         <div className="px-4 py-5 sm:p-6">
           <h2 className="text-2xl font-bold text-zinc-100 mb-4">
@@ -165,7 +169,7 @@ export default function Home() {
             </div>
           </div>
         </div>
-    </div>
+      </div>
     </>
   );
 }

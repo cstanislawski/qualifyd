@@ -12,6 +12,21 @@ Place candidates in practical testing scenarios such as:
 - Security hardening for systems and infrastructure
 - And many more job-specific technical challenges
 
+Which could be used to hire:
+
+- Platform Engineers
+- DevOps Engineers
+- Site Reliability Engineers
+- Infrastructure Engineers
+- Cloud Engineers
+- Network Engineers
+- DevSecOps Engineers
+- Security Engineers
+- Database Administrators
+- System Administrators
+- Solutions Architects
+- Software Engineers
+
 ## MVP Features
 
 - Platform foundation similar to [Killercoda](https://killercoda.com/) with assessment environments
