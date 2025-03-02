@@ -8,7 +8,8 @@ export const metadata: Metadata = {
 export default function AdminDashboard() {
   // This would be fetched from an API in a real implementation
   const statistics = {
-    totalTemplates: 15,
+    assessmentTemplates: 9,
+    taskTemplates: 6,
     activeEvaluations: 8,
     completedEvaluations: 32,
     candidates: 45,
@@ -57,15 +58,25 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         <div className="bg-zinc-900 overflow-hidden shadow rounded-lg border border-zinc-800">
           <div className="px-4 py-5 sm:p-6">
-            <dl>
-              <dt className="text-sm font-medium text-zinc-400 truncate">Total Templates</dt>
-              <dd className="mt-1 text-3xl font-semibold text-indigo-400">{statistics.totalTemplates}</dd>
-            </dl>
+            <div className="flex">
+              <div className="flex-1">
+                <div className="text-sm font-medium text-zinc-400 truncate">Templates</div>
+                <div className="mt-1 text-3xl font-semibold text-indigo-400">{statistics.assessmentTemplates + statistics.taskTemplates}</div>
+              </div>
+              <div className="pl-4 border-l border-zinc-800">
+                <div className="text-sm text-zinc-400">
+                  Assessment: <span className="text-indigo-300 font-medium">{statistics.assessmentTemplates}</span>
+                </div>
+                <div className="mt-2 text-sm text-zinc-400">
+                  Task: <span className="text-indigo-300 font-medium">{statistics.taskTemplates}</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div className="bg-zinc-800 px-4 py-4 sm:px-6">
+          <div className="bg-zinc-800 px-4 py-3 sm:px-6">
             <div className="text-sm">
               <Link href="/admin/templates" className="font-medium text-indigo-400 hover:text-indigo-300">
-                View all<span className="sr-only"> templates</span>
+                View all
               </Link>
             </div>
           </div>
@@ -78,10 +89,10 @@ export default function AdminDashboard() {
               <dd className="mt-1 text-3xl font-semibold text-indigo-400">{statistics.activeEvaluations}</dd>
             </dl>
           </div>
-          <div className="bg-zinc-800 px-4 py-4 sm:px-6">
+          <div className="bg-zinc-800 px-4 py-3 sm:px-6">
             <div className="text-sm">
               <Link href="/admin/evaluations" className="font-medium text-indigo-400 hover:text-indigo-300">
-                View all<span className="sr-only"> evaluations</span>
+                View all
               </Link>
             </div>
           </div>
@@ -94,10 +105,10 @@ export default function AdminDashboard() {
               <dd className="mt-1 text-3xl font-semibold text-indigo-400">{statistics.completedEvaluations}</dd>
             </dl>
           </div>
-          <div className="bg-zinc-800 px-4 py-4 sm:px-6">
+          <div className="bg-zinc-800 px-4 py-3 sm:px-6">
             <div className="text-sm">
               <Link href="/admin/completed" className="font-medium text-indigo-400 hover:text-indigo-300">
-                View all<span className="sr-only"> completed evaluations</span>
+                View all
               </Link>
             </div>
           </div>
@@ -110,10 +121,10 @@ export default function AdminDashboard() {
               <dd className="mt-1 text-3xl font-semibold text-indigo-400">{statistics.candidates}</dd>
             </dl>
           </div>
-          <div className="bg-zinc-800 px-4 py-4 sm:px-6">
+          <div className="bg-zinc-800 px-4 py-3 sm:px-6">
             <div className="text-sm">
               <Link href="/admin/candidates" className="font-medium text-indigo-400 hover:text-indigo-300">
-                View all<span className="sr-only"> candidates</span>
+                View all
               </Link>
             </div>
           </div>
@@ -123,12 +134,15 @@ export default function AdminDashboard() {
       {/* Quick Actions */}
       <div className="mb-8">
         <h2 className="text-xl font-semibold text-zinc-100 mb-4">Quick Actions</h2>
-        <div className="flex space-x-4">
-          <Link href="/admin/templates/new" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            Create New Template
+        <div className="flex flex-wrap gap-4">
+          <Link href="/admin/assessments/new" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            New Assessment
           </Link>
-          <Link href="/admin/evaluations/new" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            Create New Evaluation
+          <Link href="/admin/templates/assessments/new" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            New Assessment Template
+          </Link>
+          <Link href="/admin/templates/tasks/new" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            New Task Template
           </Link>
         </div>
       </div>
