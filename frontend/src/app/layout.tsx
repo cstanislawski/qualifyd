@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
-import NavLinks from "../components/NavLinks";
+import NavLinks from "@/components/NavLinks";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,6 +20,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const currentYear = new Date().getFullYear();
+  // In a real application, you would implement proper auth check
+  // This is a placeholder since we can't easily access cookies in server components
+  const isLoggedIn = false; // Default to not logged in for now
 
   return (
     <html lang="en">
@@ -35,30 +38,38 @@ export default function RootLayout({
                   <NavLinks />
                 </div>
               </div>
-              {/* User menu */}
-              <div className="hidden sm:ml-6 sm:flex sm:items-center">
-                <div className="ml-3 relative group">
-                  <div>
-                    <button className="bg-zinc-800 rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" id="user-menu" aria-expanded="false" aria-haspopup="true">
-                      <span className="sr-only">Open user menu</span>
-                      <span className="inline-block h-8 w-8 rounded-full overflow-hidden bg-zinc-700">
-                        <svg className="h-full w-full text-zinc-400" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                        </svg>
-                      </span>
-                    </button>
-                  </div>
-                  <div
-                    className="hidden group-hover:block origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-zinc-800 ring-1 ring-zinc-700 ring-opacity-5 focus:outline-none"
-                    role="menu"
-                    aria-orientation="vertical"
-                    aria-labelledby="user-menu">
-                    <Link href="/profile" className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700" role="menuitem">Your Profile</Link>
-                    <Link href="/settings" className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700" role="menuitem">Settings</Link>
-                    <Link href="/logout" className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700" role="menuitem">Sign out</Link>
+              {/* User menu - only shown when logged in */}
+              {isLoggedIn ? (
+                <div className="hidden sm:ml-6 sm:flex sm:items-center">
+                  <div className="ml-3 relative group">
+                    <div>
+                      <button className="bg-zinc-800 rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" id="user-menu" aria-expanded="false" aria-haspopup="true">
+                        <span className="sr-only">Open user menu</span>
+                        <span className="inline-block h-8 w-8 rounded-full overflow-hidden bg-zinc-700">
+                          <svg className="h-full w-full text-zinc-400" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                          </svg>
+                        </span>
+                      </button>
+                    </div>
+                    <div
+                      className="hidden group-hover:block origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-zinc-800 ring-1 ring-zinc-700 ring-opacity-5 focus:outline-none"
+                      role="menu"
+                      aria-orientation="vertical"
+                      aria-labelledby="user-menu">
+                      <Link href="/profile" className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700" role="menuitem">Your Profile</Link>
+                      <Link href="/settings" className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700" role="menuitem">Settings</Link>
+                      <Link href="/logout" className="block px-4 py-2 text-sm text-zinc-300 hover:bg-zinc-700" role="menuitem">Sign out</Link>
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="hidden sm:flex sm:items-center">
+                  <Link href="/login" className="inline-flex items-center px-4 py-2 border border-zinc-700 text-sm font-medium rounded-md text-zinc-100 bg-zinc-800 hover:bg-zinc-700">
+                    Sign in
+                  </Link>
+                </div>
+              )}
               {/* Mobile menu button */}
               <div className="-mr-2 flex items-center sm:hidden">
                 <button type="button" className="bg-zinc-800 inline-flex items-center justify-center p-2 rounded-md text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" aria-expanded="false">
