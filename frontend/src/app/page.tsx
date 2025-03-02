@@ -106,70 +106,199 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Roles Carousel Section */}
-      <RolesCarousel />
+      {/* How It Works Section - Redesigned and moved up */}
+      <div className="mt-8 bg-zinc-900/80 overflow-hidden shadow-lg rounded-lg border border-zinc-800 backdrop-blur-sm">
+        <div className="px-4 py-8 sm:py-12 sm:px-10 md:px-12 lg:px-16">
+          <div className="flex items-center justify-center mb-10">
+            <div className="h-[1px] w-16 bg-gradient-to-r from-transparent to-indigo-500/50 mr-6"></div>
+            <h2 className="text-3xl font-bold text-zinc-100">
+              How It Works
+            </h2>
+            <div className="h-[1px] w-16 bg-gradient-to-l from-transparent to-indigo-500/50 ml-6"></div>
+          </div>
 
-      <div className="mt-8 bg-zinc-900 overflow-hidden shadow rounded-lg border border-zinc-800">
-        <div className="px-4 py-5 sm:p-6">
-          <h2 className="text-2xl font-bold text-zinc-100 mb-4">
-            How It Works
-          </h2>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-800">
-              <div className="text-xl font-semibold mb-2 text-zinc-100">For Candidates</div>
-              <p className="text-zinc-300 mb-3">
-                <span className="text-indigo-400 font-medium">Stop solving puzzles. Start showcasing real skills.</span> Qualifyd puts you in environments that mirror actual work, not artificial challenges.
-              </p>
-              <ul className="list-disc pl-5 text-zinc-300 space-y-2">
-                <li><span className="text-white font-medium">Real environments</span> — Show your skills in the same tools and interfaces you&apos;d use on the job</li>
-                <li><span className="text-white font-medium">Practical challenges</span> — Troubleshoot, solve, and build using industry-standard technologies</li>
-                <li><span className="text-white font-medium">Fair assessment</span> — Be evaluated on what matters: your ability to solve real-world problems</li>
-                <li><span className="text-white font-medium">Meaningful feedback</span> — Receive insights that actually help you grow professionally</li>
-              </ul>
+          <div className="w-full mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-0 sm:px-2 md:px-4">
+            {/* For Candidates */}
+            <div className="relative group transition-all duration-300 transform hover:scale-102 hover:z-10">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl opacity-20 blur-sm group-hover:opacity-30 group-hover:blur-sm transition duration-300"></div>
+              <div className="relative bg-zinc-800/80 rounded-xl p-5 h-full border border-transparent group-hover:border-indigo-500/20 group-hover:shadow-sm group-hover:shadow-indigo-500/5 transition-all duration-300">
+                <div className="flex items-center mb-4">
+                  <div className="bg-indigo-500/10 p-2 rounded-lg mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-zinc-100">For Candidates</h3>
+                </div>
+                <p className="text-zinc-300 mb-4">
+                  <span className="text-indigo-400 font-medium">Stop solving puzzles. Start showcasing real skills.</span> Qualifyd puts you in environments that mirror actual work, not artificial challenges.
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Real environments</span> — Show your skills in the same tools and interfaces you&apos;d use on the job</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Practical challenges</span> — Troubleshoot, solve, and build using industry-standard technologies</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Fair assessment</span> — Be evaluated on what matters: your ability to solve real-world problems</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Meaningful feedback</span> — Receive insights that actually help you grow professionally</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
-            <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-800">
-              <div className="text-xl font-semibold mb-2 text-zinc-100">For Organizations</div>
-              <p className="text-zinc-300 mb-3">
-                <span className="text-indigo-400 font-medium">Hire for real-world performance, not interview skills.</span> Transform your technical hiring with realistic assessments that reveal true capabilities.
-              </p>
-              <ul className="list-disc pl-5 text-zinc-300 space-y-2">
-                <li><span className="text-white font-medium">Predictive hiring</span> — Observe candidates performing tasks they&apos;ll actually do on the job</li>
-                <li><span className="text-white font-medium">Secure platform</span> — Multi-tenant isolation with role-based access control for your team</li>
-                <li><span className="text-white font-medium">Flexible plans</span> — Scale resources based on your hiring volume and specific needs</li>
-                <li><span className="text-white font-medium">Analytics dashboard</span> — Track assessment metrics and hiring efficiency across your organization</li>
-              </ul>
+            {/* For Organizations */}
+            <div className="relative group transition-all duration-300 transform hover:scale-102 hover:z-10">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl opacity-20 blur-sm group-hover:opacity-30 group-hover:blur-sm transition duration-300"></div>
+              <div className="relative bg-zinc-800/80 rounded-xl p-5 h-full border border-transparent group-hover:border-indigo-500/20 group-hover:shadow-sm group-hover:shadow-indigo-500/5 transition-all duration-300">
+                <div className="flex items-center mb-4">
+                  <div className="bg-indigo-500/10 p-2 rounded-lg mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-zinc-100">For Organizations</h3>
+                </div>
+                <p className="text-zinc-300 mb-4">
+                  <span className="text-indigo-400 font-medium">Hire for real-world performance, not interview skills.</span> Transform your technical hiring with realistic assessments that reveal true capabilities.
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Predictive hiring</span> — Observe candidates performing tasks they&apos;ll actually do on the job</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Secure platform</span> — Multi-tenant isolation with role-based access control for your team</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Flexible plans</span> — Scale resources based on your hiring volume and specific needs</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Analytics dashboard</span> — Track assessment metrics and hiring efficiency across your organization</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
-            <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-800">
-              <div className="text-xl font-semibold mb-2 text-zinc-100">For Hiring Managers</div>
-              <p className="text-zinc-300 mb-3">
-                <span className="text-indigo-400 font-medium">Craft assessments that truly predict job success.</span> Replace arbitrary coding exercises with meaningful technical challenges.
-              </p>
-              <ul className="list-disc pl-5 text-zinc-300 space-y-2">
-                <li><span className="text-white font-medium">Custom templates</span> — Design role-specific evaluations that measure relevant skills</li>
-                <li><span className="text-white font-medium">Realistic simulation</span> — Create environments that reflect your actual tech stack</li>
-                <li><span className="text-white font-medium">Scoring automation</span> — Define objective criteria for consistent candidate evaluation</li>
-                <li><span className="text-white font-medium">Time efficiency</span> — Reduce screening time while improving assessment quality</li>
-              </ul>
+            {/* For Hiring Managers */}
+            <div className="relative group transition-all duration-300 transform hover:scale-102 hover:z-10">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl opacity-20 blur-sm group-hover:opacity-30 group-hover:blur-sm transition duration-300"></div>
+              <div className="relative bg-zinc-800/80 rounded-xl p-5 h-full border border-transparent group-hover:border-indigo-500/20 group-hover:shadow-sm group-hover:shadow-indigo-500/5 transition-all duration-300">
+                <div className="flex items-center mb-4">
+                  <div className="bg-indigo-500/10 p-2 rounded-lg mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-zinc-100">For Hiring Managers</h3>
+                </div>
+                <p className="text-zinc-300 mb-4">
+                  <span className="text-indigo-400 font-medium">Craft assessments that truly predict job success.</span> Replace arbitrary coding exercises with meaningful technical challenges.
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Custom templates</span> — Design role-specific evaluations that measure relevant skills</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Realistic simulation</span> — Create environments that reflect your actual tech stack</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Scoring automation</span> — Define objective criteria for consistent candidate evaluation</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Time efficiency</span> — Reduce screening time while improving assessment quality</span>
+                  </li>
+                </ul>
+              </div>
             </div>
 
-            <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-800">
-              <div className="text-xl font-semibold mb-2 text-zinc-100">For Technical Evaluators</div>
-              <p className="text-zinc-300 mb-3">
-                <span className="text-indigo-400 font-medium">See beyond the code to understand the engineer.</span> Gain unprecedented visibility into a candidate&apos;s problem-solving approach.
-              </p>
-              <ul className="list-disc pl-5 text-zinc-300 space-y-2">
-                <li><span className="text-white font-medium">Complete visibility</span> — Review every command, action, and decision the candidate makes</li>
-                <li><span className="text-white font-medium">Process insight</span> — Understand how candidates approach problems, not just their solutions</li>
-                <li><span className="text-white font-medium">Objective metrics</span> — Evaluate performance based on measurable criteria, not subjective opinions</li>
-                <li><span className="text-white font-medium">Comparative analysis</span> — Assess candidates against each other using consistent, fair standards</li>
-              </ul>
+            {/* For Technical Evaluators */}
+            <div className="relative group transition-all duration-300 transform hover:scale-102 hover:z-10">
+              <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-xl opacity-20 blur-sm group-hover:opacity-30 group-hover:blur-sm transition duration-300"></div>
+              <div className="relative bg-zinc-800/80 rounded-xl p-5 h-full border border-transparent group-hover:border-indigo-500/20 group-hover:shadow-sm group-hover:shadow-indigo-500/5 transition-all duration-300">
+                <div className="flex items-center mb-4">
+                  <div className="bg-indigo-500/10 p-2 rounded-lg mr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-xl font-semibold text-zinc-100">For Technical Evaluators</h3>
+                </div>
+                <p className="text-zinc-300 mb-4">
+                  <span className="text-indigo-400 font-medium">See beyond the code to understand the engineer.</span> Gain unprecedented visibility into a candidate&apos;s problem-solving approach.
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Complete visibility</span> — Review every decision and action the candidate makes</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Process insight</span> — Understand how candidates approach problems, not just their solutions</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Objective metrics</span> — Evaluate performance based on measurable criteria, not subjective opinions</span>
+                  </li>
+                  <li className="flex items-start">
+                    <svg className="h-5 w-5 text-indigo-400 mr-2 mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span><span className="text-white font-medium">Comparative analysis</span> — Assess candidates against each other using consistent, fair standards</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Roles Carousel Section */}
+      <RolesCarousel />
     </>
   );
 }

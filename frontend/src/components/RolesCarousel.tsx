@@ -56,11 +56,11 @@ export default function RolesCarousel() {
 
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="flex items-center justify-center mb-8">
-            <div className="h-[1px] w-12 bg-gradient-to-r from-transparent to-indigo-500/50 mr-6"></div>
-            <h2 className="text-2xl font-bold text-zinc-100">
+            <div className="h-[1px] w-16 bg-gradient-to-r from-transparent to-indigo-500/50 mr-6"></div>
+            <h2 className="text-3xl font-bold text-zinc-100">
               Hire great
             </h2>
-            <div className="h-[1px] w-12 bg-gradient-to-l from-transparent to-indigo-500/50 ml-6"></div>
+            <div className="h-[1px] w-16 bg-gradient-to-l from-transparent to-indigo-500/50 ml-6"></div>
           </div>
 
           <div className="h-20 flex items-center justify-center overflow-hidden">
