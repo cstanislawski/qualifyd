@@ -79,7 +79,7 @@ export default function Pricing() {
                   <svg className="h-6 w-6 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-zinc-300">Up to 5 team members</span>
+                  <span className="text-zinc-300">Up to 10 team members</span>
                 </li>
                 <li className="flex items-start">
                   <svg className="h-6 w-6 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

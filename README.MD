@@ -129,7 +129,7 @@ Qualifyd addresses these limitations by providing realistic, configurable enviro
 |---------|---------|------|------------|
 | Price | $100/month | $200/month | Custom |
 | Assessments per month | Up to 10 | Up to 40 | Unlimited |
-| Team members | Up to 5 | ∞ | ∞ |
+| Team members | Up to 10 | ∞ | ∞ |
 | Custom templates | 5 | 20 | Unlimited |
 | Concurrent environments | 2 | 10 | Configurable |
 | Available machine tiers | Standard only | Basic, Standard, Performance | All tiers + Custom |
