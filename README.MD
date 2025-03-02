@@ -131,7 +131,7 @@ Qualifyd addresses these limitations by providing realistic, configurable enviro
 | Assessments per month | Up to 10 | Up to 40 | Unlimited |
 | Team members | Up to 5 | ∞ | ∞ |
 | Custom templates | 5 | 20 | Unlimited |
-| Concurrent environments | 3 | 10 | Configurable |
+| Concurrent environments | 2 | 10 | Configurable |
 | Included environment minutes/month (2cpu/4gb/50gb as baseline)¹ | 900 | 3600 | Configurable |
 | Overage rate (2cpu/4gb/50gb as baseline) | $0.20/min | $0.15/min | $0.10/min |
 | Custom machine sizes | - | ✓ | ✓ |

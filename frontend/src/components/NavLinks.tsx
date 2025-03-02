@@ -8,6 +8,7 @@ export default function NavLinks() {
 
   const navLinks = [
     { href: '/', label: 'Home' },
+    { href: '/pricing', label: 'Pricing' },
     { href: '/candidate/assessments', label: 'Assessments' },
     { href: '/admin', label: 'Admin' },
     { href: '/team', label: 'Team' },
