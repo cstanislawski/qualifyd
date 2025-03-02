@@ -132,9 +132,9 @@ Qualifyd addresses these limitations by providing realistic, configurable enviro
 | Team members | Up to 5 | ∞ | ∞ |
 | Custom templates | 5 | 20 | Unlimited |
 | Concurrent environments | 2 | 10 | Configurable |
-| Included environment minutes/month (2cpu/4gb/50gb as baseline)¹ | 900 | 3600 | Configurable |
-| Overage rate (2cpu/4gb/50gb as baseline) | $0.20/min | $0.15/min | $0.10/min |
-| Custom machine sizes | - | ✓ | ✓ |
+| Available machine tiers | Standard only | Basic, Standard, Performance | All tiers + Custom |
+| Included environment minutes/month¹ | 900 | 3600 | Configurable |
+| Overage rate (Standard tier) | $0.20/min | $0.15/min | $0.10/min |
 | Environment runtime | Up to 2 hours | Up to 8 hours | Configurable |
 | Snapshot storage | Up to 7 days | Up to 30 days | Configurable |
 | Internet access for environments | ✓ | ✓ | ✓ |
@@ -146,7 +146,20 @@ Qualifyd addresses these limitations by providing realistic, configurable enviro
 
 ¹ - machine startup time is always free and does not count towards the included minutes
 
-(not final, just a placeholder/proposal)
+### Machine Tiers
+
+| Tier | CPU | RAM | Storage | Best for |
+|------|-----|-----|---------|----------|
+| Basic | 1 CPU | 2GB | 20GB | Simple programming tasks, shell scripting, web development |
+| Standard | 2 CPU | 4GB | 50GB | General DevOps, containerized applications, databases |
+| Performance | 4 CPU | 8GB | 80GB | Kubernetes, data processing, complex build environments |
+| Custom | Configurable | Configurable | Configurable | Specialized workloads (Enterprise plan only) |
+
+Minutes are consumed at different rates depending on the machine tier:
+
+- Basic tier = 0.5× Standard rate (half the standard rate)
+- Standard tier = 1.0× (baseline)
+- Performance tier = 2.0× Standard rate (twice the standard rate)
 
 ### Additional Resources
 

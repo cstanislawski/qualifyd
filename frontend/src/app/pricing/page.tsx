@@ -103,6 +103,12 @@ export default function Pricing() {
                   <svg className="h-6 w-6 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
+                  <span className="text-zinc-300">Standard machine tier only</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="h-6 w-6 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                   <span className="text-zinc-300">Up to 2 hours environment runtime</span>
                 </li>
               </ul>
@@ -163,6 +169,18 @@ export default function Pricing() {
                   <svg className="h-6 w-6 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
+                  <span className="text-zinc-300">All machine tiers (Basic, Standard, Performance)</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="h-6 w-6 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-zinc-300">Up to 8 hours environment runtime</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="h-6 w-6 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                   <span className="text-zinc-300">Custom machine sizes</span>
                 </li>
                 <li className="flex items-start">
@@ -213,13 +231,19 @@ export default function Pricing() {
                   <svg className="h-6 w-6 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-zinc-300">Configurable concurrent environments</span>
+                  <span className="text-zinc-300">Configurable environment minutes</span>
                 </li>
                 <li className="flex items-start">
                   <svg className="h-6 w-6 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span className="text-zinc-300">Custom machine images</span>
+                  <span className="text-zinc-300">All machine tiers + custom configurations</span>
+                </li>
+                <li className="flex items-start">
+                  <svg className="h-6 w-6 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="text-zinc-300">Configurable environment runtime</span>
                 </li>
                 <li className="flex items-start">
                   <svg className="h-6 w-6 text-indigo-400 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -310,20 +334,53 @@ export default function Pricing() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-zinc-900/70 border border-zinc-800 rounded-xl p-6 hover:border-indigo-500/30 transition-all duration-300">
-              <h4 className="text-lg font-medium text-white mb-2">How are environment minutes calculated?</h4>
-              <p className="text-zinc-400">Environment minutes are calculated based on the actual runtime of your assessment environments. Machine startup time is always free and does not count toward your included minutes.</p>
+              <h4 className="text-lg font-medium text-white mb-2">What are the available machine tiers?</h4>
+              <p className="text-zinc-400">We offer three machine tiers to fit different assessment needs, each consuming minutes at different rates:</p>
+              <ul className="mt-2 space-y-2 text-zinc-400 text-sm">
+                <li>
+                  <span className="font-medium text-zinc-300">Basic:</span> 1 CPU, 2GB RAM, 20GB storage
+                  <div className="mt-1">Ideal for simple programming tasks and shell scripting</div>
+                </li>
+                <li>
+                  <span className="font-medium text-zinc-300">Standard:</span> 2 CPU, 4GB RAM, 50GB storage
+                  <div className="mt-1">Perfect for general DevOps and containerized applications</div>
+                </li>
+                <li>
+                  <span className="font-medium text-zinc-300">Performance:</span> 4 CPU, 8GB RAM, 80GB storage
+                  <div className="mt-1">Optimized for Kubernetes and data processing</div>
+                </li>
+              </ul>
+              <p className="mt-2 text-zinc-400">Starter plans have access to Standard tier only, Team plans can use all three tiers, and Enterprise plans can also create custom configurations.</p>
             </div>
+
+            <div className="bg-zinc-900/70 border border-zinc-800 rounded-xl p-6 hover:border-indigo-500/30 transition-all duration-300">
+              <h4 className="text-lg font-medium text-white mb-2">How are environment minutes calculated?</h4>
+              <p className="text-zinc-400">Minutes are based on actual environment&apos;s runtime, with machine startup time always free. They&apos;re consumed at rates specific to the tier:</p>
+              <ul className="mt-2 space-y-2 text-zinc-400 text-sm">
+                <li>
+                  <span className="font-medium text-zinc-300">Basic:</span> 0.5× Standard rate
+                  <div className="mt-1">30 minutes of usage consumes only 15 minutes from your plan</div>
+                </li>
+                <li>
+                  <span className="font-medium text-zinc-300">Standard:</span> 1.0× (baseline)
+                  <div className="mt-1">30 minutes of usage consumes 30 minutes from your plan</div>
+                </li>
+                <li>
+                  <span className="font-medium text-zinc-300">Performance:</span> 2.0× Standard rate
+                  <div className="mt-1">30 minutes of usage consumes 60 minutes from your plan</div>
+                </li>
+              </ul>
+              <p className="mt-3 text-zinc-400">The 3 tiers cover all the needs for most assessments. Exceeding your included minutes results in billing at your plan&apos;s overage rate.</p>
+            </div>
+
             <div className="bg-zinc-900/70 border border-zinc-800 rounded-xl p-6 hover:border-indigo-500/30 transition-all duration-300">
               <h4 className="text-lg font-medium text-white mb-2">Can I upgrade my plan at any time?</h4>
               <p className="text-zinc-400">Yes, you can upgrade your plan at any time. The new plan and its benefits will be applied immediately, with prorated billing for the remainder of your billing cycle.</p>
             </div>
+
             <div className="bg-zinc-900/70 border border-zinc-800 rounded-xl p-6 hover:border-indigo-500/30 transition-all duration-300">
               <h4 className="text-lg font-medium text-white mb-2">What happens if I exceed my environment minutes?</h4>
               <p className="text-zinc-400">If you exceed your included environment minutes, additional usage will be billed at the overage rate specified in your plan. You&apos;ll receive notifications as you approach your limit.</p>
-            </div>
-            <div className="bg-zinc-900/70 border border-zinc-800 rounded-xl p-6 hover:border-indigo-500/30 transition-all duration-300">
-              <h4 className="text-lg font-medium text-white mb-2">Do you offer discounts for educational institutions?</h4>
-              <p className="text-zinc-400">Yes, we offer special pricing for educational institutions. Please contact our sales team to learn more about our educational discounts and plans.</p>
             </div>
           </div>
         </div>
