@@ -157,7 +157,7 @@ This project is in early development, and the name "Qualifyd" is provisional. Al
 
 Technology stack:
 
-- Frontend: [Next.js](https://github.com/vercel/next.js/) + [TailwindCSS](https://github.com/tailwindlabs/tailwindcss) + [xterm.js](https://github.com/xtermjs/xterm.js)
+- Frontend: [Next.js](https://github.com/vercel/next.js/) + [TailwindCSS](https://github.com/tailwindlabs/tailwindcss) + [shadcn/ui](https://ui.shadcn.com/)
 - Backend: Go + [Chi](https://github.com/go-chi/chi) for the API + [jackc/pgx](https://github.com/jackc/pgx) for the database
 - Database: PostgreSQL
 - Queue system: TBD
