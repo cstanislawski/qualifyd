@@ -47,14 +47,14 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <>
-      <div className="px-4 py-5 sm:px-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold text-zinc-100">Admin Dashboard</h1>
         <p className="mt-1 max-w-2xl text-sm text-zinc-400">Manage your technical assessment templates and evaluations.</p>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-6">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
         <div className="bg-zinc-900 overflow-hidden shadow rounded-lg border border-zinc-800">
           <div className="px-4 py-5 sm:p-6">
             <dl>
@@ -121,7 +121,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="mb-6">
+      <div className="mb-8">
         <h2 className="text-xl font-semibold text-zinc-100 mb-4">Quick Actions</h2>
         <div className="flex space-x-4">
           <Link href="/admin/templates/new" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
@@ -134,7 +134,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Recent Activity */}
-      <div className="mb-6">
+      <div className="mb-8">
         <h2 className="text-xl font-semibold text-zinc-100 mb-4">Recent Activity</h2>
         <div className="bg-zinc-900 overflow-hidden shadow rounded-lg border border-zinc-800">
           <ul className="divide-y divide-zinc-800">
@@ -170,6 +170,6 @@ export default function AdminDashboard() {
           </ul>
         </div>
       </div>
-    </>
+    </div>
   );
 }

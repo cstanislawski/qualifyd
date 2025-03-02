@@ -38,13 +38,13 @@ export default function AssessmentsPage() {
   ];
 
   return (
-    <>
-      <div className="px-4 py-5 sm:px-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="mb-6">
         <h1 className="text-2xl font-bold text-zinc-100">My Assessments</h1>
         <p className="mt-1 max-w-2xl text-sm text-zinc-400">View your scheduled and completed technical assessments.</p>
       </div>
 
-      <div className="bg-zinc-900 shadow overflow-hidden sm:rounded-md border border-zinc-800">
+      <div className="bg-zinc-900 shadow overflow-hidden rounded-lg border border-zinc-800 mb-8">
         <ul className="divide-y divide-zinc-800">
           {assessments.map((assessment) => (
             <li key={assessment.id}>
@@ -108,6 +108,6 @@ export default function AssessmentsPage() {
           ))}
         </ul>
       </div>
-    </>
+    </div>
   );
 }
