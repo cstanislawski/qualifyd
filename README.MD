@@ -1,15 +1,15 @@
 # Qualifyd
 
-Qualifyd is a platform for creating and managing realistic technical assessment environments that evaluate job candidates in work-like scenarios. Instead of traditional coding challenges, Qualifyd enables you to observe how candidates perform in realistic environments that simulate actual job responsibilities.
+Qualifyd is a platform for creating and managing realistic technical assessments that evaluate job candidates in work-like scenarios. Instead of traditional coding challenges, Qualifyd enables you to observe how candidates perform in realistic environments that simulate actual job responsibilities.
 
 ## Use Cases
 
 Place candidates in practical testing scenarios such as:
 
-- Troubleshooting Kubernetes configuration issues
-- Diagnosing and resolving Linux server problems
-- Creating docker-compose configurations for new services
-- Writing Terraform configurations for cloud infrastructure
+- Kubernetes configuration and troubleshooting challenges
+- Linux systems administration and optimization tasks
+- Container orchestration across different technologies
+- Security hardening for systems and infrastructure
 - And many more job-specific technical challenges
 
 ## MVP Features

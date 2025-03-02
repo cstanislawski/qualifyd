@@ -11,7 +11,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Qualifyd - Technical Assessment Platform",
-  description: "Platform for creating and managing realistic technical assessment environments",
+  description: "Platform for creating and managing realistic technical assessments",
 };
 
 export default function RootLayout({

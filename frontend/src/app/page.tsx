@@ -40,14 +40,14 @@ export default function Home() {
                 <div className="flex items-start">
                   <div className="bg-indigo-500/10 p-3 rounded-lg mr-4 group-hover:bg-indigo-500/20 transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M4 21v-13a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v13"></path>
-                      <line x1="9" y1="5" x2="15" y2="5"></line>
-                      <line x1="12" y1="5" x2="12" y2="21"></line>
+                      <path d="M19 16V7a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2z"></path>
+                      <line x1="12" y1="7" x2="12" y2="16"></line>
+                      <line x1="7" y1="11.5" x2="17" y2="11.5"></line>
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-zinc-100 mb-2">Linux Server Problems</h3>
-                    <p className="text-zinc-400">Diagnose and resolve complex Linux server issues ranging from performance bottlenecks to system failures.</p>
+                    <h3 className="text-lg font-semibold text-zinc-100 mb-2">Linux Systems Administration</h3>
+                    <p className="text-zinc-400">Configure, optimize, and troubleshoot Linux environments from system performance to service deployment and maintenance.</p>
                   </div>
                 </div>
               </div>
@@ -63,24 +63,23 @@ export default function Home() {
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-zinc-100 mb-2">Docker Configurations</h3>
-                    <p className="text-zinc-400">Create and optimize docker-compose configurations for deploying interconnected services with proper networking.</p>
+                    <h3 className="text-lg font-semibold text-zinc-100 mb-2">Container Orchestration</h3>
+                    <p className="text-zinc-400">Design, deploy, and troubleshoot containerized applications across different container technologies and orchestration systems.</p>
                   </div>
                 </div>
               </div>
 
-              {/* Terraform Card */}
+              {/* Security Card - Replacing Terraform Card */}
               <div className="bg-zinc-800/50 rounded-xl p-6 border border-zinc-700 hover:border-indigo-500 transition-all hover:shadow-md hover:shadow-indigo-500/10 group">
                 <div className="flex items-start">
                   <div className="bg-indigo-500/10 p-3 rounded-lg mr-4 group-hover:bg-indigo-500/20 transition-all">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5"></path>
-                      <path d="M2 12l10 5 10-5"></path>
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                     </svg>
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold text-zinc-100 mb-2">Terraform Infrastructure</h3>
-                    <p className="text-zinc-400">Write and troubleshoot Terraform configurations to provision cloud infrastructure following best practices.</p>
+                    <h3 className="text-lg font-semibold text-zinc-100 mb-2">Security Hardening</h3>
+                    <p className="text-zinc-400">Identify vulnerabilities and implement best practices to secure systems, networks, and cloud infrastructure.</p>
                   </div>
                 </div>
               </div>
