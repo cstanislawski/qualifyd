@@ -54,26 +54,57 @@ export default function Home() {
             How It Works
           </h2>
 
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-800">
-              <div className="text-xl font-semibold mb-2 text-zinc-100">For Recruiters</div>
-              <p className="text-zinc-300">
-                Create evaluation paths with multiple testing scenarios. Choose from pre-defined templates or create your own. Set up readiness scripts and automatic scoring checks.
+              <div className="text-xl font-semibold mb-2 text-zinc-100">For Candidates</div>
+              <p className="text-zinc-300 mb-3">
+                <span className="text-indigo-400 font-medium">Stop solving puzzles. Start showcasing real skills.</span> Qualifyd puts you in environments that mirror actual work, not artificial challenges.
               </p>
+              <ul className="list-disc pl-5 text-zinc-300 space-y-2">
+                <li><span className="text-white font-medium">Real environments</span> — Show your skills in the same tools and interfaces you&apos;d use on the job</li>
+                <li><span className="text-white font-medium">Practical challenges</span> — Troubleshoot, solve, and build using industry-standard technologies</li>
+                <li><span className="text-white font-medium">Fair assessment</span> — Be evaluated on what matters: your ability to solve real-world problems</li>
+                <li><span className="text-white font-medium">Meaningful feedback</span> — Receive insights that actually help you grow professionally</li>
+              </ul>
             </div>
 
             <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-800">
-              <div className="text-xl font-semibold mb-2 text-zinc-100">For Candidates</div>
-              <p className="text-zinc-300">
-                Access a realistic environment through a browser-based terminal. Complete practical tasks that simulate real job responsibilities within a specified time.
+              <div className="text-xl font-semibold mb-2 text-zinc-100">For Companies</div>
+              <p className="text-zinc-300 mb-3">
+                <span className="text-indigo-400 font-medium">Hire for real-world performance, not interview skills.</span> See candidates demonstrate exactly what they&apos;ll do in the role.
               </p>
+              <ul className="list-disc pl-5 text-zinc-300 space-y-2">
+                <li><span className="text-white font-medium">Predictive hiring</span> — Observe candidates performing tasks they&apos;ll actually do in the job</li>
+                <li><span className="text-white font-medium">Reduced risk</span> — Validate skills objectively before making costly hiring decisions</li>
+                <li><span className="text-white font-medium">Customizable scenarios</span> — Evaluate candidates in environments that match your tech stack</li>
+                <li><span className="text-white font-medium">Data-driven decisions</span> — Make hiring choices based on performance, not gut feeling</li>
+              </ul>
+            </div>
+
+            <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-800">
+              <div className="text-xl font-semibold mb-2 text-zinc-100">For Recruiters</div>
+              <p className="text-zinc-300 mb-3">
+                <span className="text-indigo-400 font-medium">Craft assessments that truly predict job success.</span> Replace arbitrary coding exercises with meaningful technical challenges.
+              </p>
+              <ul className="list-disc pl-5 text-zinc-300 space-y-2">
+                <li><span className="text-white font-medium">Powerful templates</span> — Design multi-stage evaluations that reveal true capabilities</li>
+                <li><span className="text-white font-medium">Realistic simulation</span> — Create environments that mimic your production systems</li>
+                <li><span className="text-white font-medium">Automatic validation</span> — Let custom scripts objectively measure candidate performance</li>
+                <li><span className="text-white font-medium">Total control</span> — Configure every aspect from time limits to environment specifications</li>
+              </ul>
             </div>
 
             <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-800">
               <div className="text-xl font-semibold mb-2 text-zinc-100">For Reviewers</div>
-              <p className="text-zinc-300">
-                See everything created by the candidate, including bash history and automatic test results. Get objective insights into candidate capabilities.
+              <p className="text-zinc-300 mb-3">
+                <span className="text-indigo-400 font-medium">See beyond the code to understand the engineer.</span> Gain unprecedented visibility into a candidate&apos;s problem-solving approach.
               </p>
+              <ul className="list-disc pl-5 text-zinc-300 space-y-2">
+                <li><span className="text-white font-medium">Complete visibility</span> — Review every command, action, and decision the candidate makes</li>
+                <li><span className="text-white font-medium">Process insight</span> — Understand how candidates approach problems, not just their solutions</li>
+                <li><span className="text-white font-medium">Objective metrics</span> — Evaluate performance based on measurable criteria, not subjective opinions</li>
+                <li><span className="text-white font-medium">Comparative analysis</span> — Assess candidates against each other using consistent, fair standards</li>
+              </ul>
             </div>
           </div>
         </div>
