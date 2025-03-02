@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
+import NavLinks from "../components/NavLinks";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -31,15 +32,7 @@ export default function RootLayout({
                   <Link href="/" className="text-xl font-bold text-indigo-400">Qualifyd</Link>
                 </div>
                 <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                  <Link href="/" className="border-indigo-500 text-zinc-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Home
-                  </Link>
-                  <Link href="/candidate/assessments" className="border-transparent text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Assessments
-                  </Link>
-                  <Link href="/admin" className="border-transparent text-zinc-400 hover:border-zinc-600 hover:text-zinc-200 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Admin
-                  </Link>
+                  <NavLinks />
                 </div>
               </div>
               {/* User menu */}
