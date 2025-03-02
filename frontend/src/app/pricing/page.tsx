@@ -285,7 +285,7 @@ export default function Pricing() {
           <div className="max-w-3xl mx-auto text-center">
             <h3 className="text-2xl font-semibold text-white mb-4">Need a Custom Solution?</h3>
             <p className="text-zinc-300 mb-8">
-              The offer doesn&apos;t match your needs? Our enterprise solutions can be tailored to your specific requirements. Contact our team to discuss your unique needs.
+            The offer doesn&apos;t match your needs? We offer custom solutions for organizations of all sizes. Contact our team to discuss your specific requirements and we&apos;ll tailor a solution that works for you.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button className="py-2 px-6 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white font-medium transition-colors duration-300">

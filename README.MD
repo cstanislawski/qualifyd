@@ -144,8 +144,6 @@ Qualifyd addresses these limitations by providing realistic, configurable enviro
 | Custom machine images | - | - | ✓ |
 | SLA | 99% | 99.5% | 99.9% |
 
-The offer does not match your needs? Contact us and we'll work something out!
-
 ¹ - machine startup time is always free and does not count towards the included minutes
 
 (not final, just a placeholder/proposal)
