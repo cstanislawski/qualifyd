@@ -10,7 +10,8 @@ export default function NavLinks() {
     { href: '/', label: 'Home' },
     { href: '/candidate/assessments', label: 'Assessments' },
     { href: '/admin', label: 'Admin' },
-    { href: '/team', label: 'Team' }
+    { href: '/team', label: 'Team' },
+    { href: '/templates', label: 'Templates' }
   ];
 
   return (
