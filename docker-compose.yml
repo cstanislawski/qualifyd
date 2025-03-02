@@ -10,6 +10,7 @@ services:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_WS_HOST=localhost:8080
+      - NEXT_TELEMETRY_DISABLED=1
     depends_on:
       - backend
     networks:

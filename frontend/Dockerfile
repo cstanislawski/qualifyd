@@ -21,6 +21,8 @@ COPY . .
 ARG NEXT_PUBLIC_WS_HOST
 # Use the build argument value or a default value if not provided
 ENV NEXT_PUBLIC_WS_HOST=${NEXT_PUBLIC_WS_HOST:-localhost:8080}
+# Disable Next.js telemetry
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Build the application
 RUN npm run build
@@ -30,6 +32,8 @@ FROM base AS runner
 WORKDIR /app
 
 ENV NODE_ENV=production
+# Disable Next.js telemetry
+ENV NEXT_TELEMETRY_DISABLED=1
 
 # Create a non-root user
 RUN addgroup --system --gid 1001 nodejs && \
