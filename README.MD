@@ -14,37 +14,50 @@ Place candidates in practical testing scenarios such as:
 
 ## MVP Features
 
-- Site like [Killercoda](https://killercoda.com/)
+- Platform foundation similar to [Killercoda](https://killercoda.com/) with assessment environments
 - Technical recruiter:
-  - can define a "evaluation path", which is composed of multiple testing scenarios
-  - can choose from a set of pre-defined templates (K8s/Linux)
-  - can create a single step / multi-step testing scenario(s) for K8s/Docker/Linux - a "template" for the testing scenario
-  - can copy an existing template to create a new one
-  - can create a new template from scratch
-  - can interact with the machine - install software, break stuff, etc, i.e.: prepare the testing environment
-  - set up readiness scripts, automatic scoring checks
-  - we snapshot the machine & spin up new machines from it shortly before the test, verifying its state by the readiness scripts
-  - can define/decide:
-    - the test duration
-    - the test start time
-    - the test end time
-    - the test score threshold
-    - the test scenario weight
-    - if there are bonus points for completing the test before the time ends, and how much per second
-    - if the machine should be given access to the internet
-    - if the candidate should be given access to the environment beforehand to familiarize themselves with it
-    - whether to show the correct answer to the candidate after the test
-    - whether to snapshot the machine after the test for manual review
-- The testing scenario gets created shortly before the test
-- Candidate:
-  - can login via SSO / register beforehand
-  - is given temporary access to a machine & instructions, with a timer
-  - is presented a terminal where they can run commands
-  - can see the score & results after the test (configurable by the recruiter)
-- The reviewers see everything created by the user in the testing scenario, as well as bash history, automatic test results & score
-- Companies:
-  - can create a company profile
-  - can invite members to the company & define their role - admin, editor, viewer (basic roles for now)
+  - Can define "task templates" with single/multiple steps and clear validation criteria
+  - Can define "assessment templates" composed of single/multiple tasks with optional dependency relationships (i.e. to complete task Y, you need to complete task X beforehand)
+  - Can select from pre-defined environment templates (K8s/Linux/Docker) with standard configurations
+  - Can create assessments for a candidate from a assessment template
+  - Can clone existing templates with version control and audit history
+  - Can prepare environments - install software, configure services, or introduce a specific issue
+  - Can implement readiness checks via a custom script
+  - Can implement automatic scoring via multiple validation scripts
+  - Can save environment snapshots for consistent test environments
+  - Can define assessment parameters:
+    - Test duration with configurable time limits
+    - Scheduled test start/end times with timezone support
+    - Score thresholds with weighted assessment components
+    - Scenario weight within overall evaluation
+    - Time-based bonus point allocation with configurable coefficients
+    - Network policy controls for internet access
+    - Environment familiarization period options
+    - Post-test solution visibility settings
+    - Environment persistence for post-test review
+- Testing environments:
+  - Created on-demand with just-in-time provisioning before the assessment
+  - Isolated with proper network segmentation
+  - Resource-constrained with configurable limits
+  - Monitored for availability and performance
+  - Automatically cleaned up after test completion
+  - Snapshotted after the assessment for post-test review (configurable, with retention period)
+- Candidate experience:
+  - SSO authentication and secure registration workflow
+  - Time-bound access to isolated assessment environments
+  - Browser-based terminal with required tooling pre-installed
+  - Real-time progress tracking and time management
+  - Configurable post-test feedback and scoring display
+- Reviewers have access to:
+  - Command history with timestamps and execution results
+  - Environment state snapshots at key assessment milestones
+  - Automated test results with scoring breakdown
+  - Performance metrics including resource utilization and completion time
+- Company management:
+  - Secure company profile with multi-tenant isolation
+  - Role-based access control with initial roles (admin, editor, viewer)
+  - Usage tracking and resource allocation monitoring
+  - Basic reporting and assessment analytics
 
 ### Future Roadmap
 
