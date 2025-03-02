@@ -69,33 +69,33 @@ export default function Home() {
             </div>
 
             <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-800">
-              <div className="text-xl font-semibold mb-2 text-zinc-100">For Companies</div>
+              <div className="text-xl font-semibold mb-2 text-zinc-100">For Organizations</div>
               <p className="text-zinc-300 mb-3">
-                <span className="text-indigo-400 font-medium">Hire for real-world performance, not interview skills.</span> See candidates demonstrate exactly what they&apos;ll do in the role.
+                <span className="text-indigo-400 font-medium">Hire for real-world performance, not interview skills.</span> Transform your technical hiring with realistic assessments that reveal true capabilities.
               </p>
               <ul className="list-disc pl-5 text-zinc-300 space-y-2">
-                <li><span className="text-white font-medium">Predictive hiring</span> — Observe candidates performing tasks they&apos;ll actually do in the job</li>
-                <li><span className="text-white font-medium">Reduced risk</span> — Validate skills objectively before making costly hiring decisions</li>
-                <li><span className="text-white font-medium">Customizable scenarios</span> — Evaluate candidates in environments that match your tech stack</li>
-                <li><span className="text-white font-medium">Data-driven decisions</span> — Make hiring choices based on performance, not gut feeling</li>
+                <li><span className="text-white font-medium">Predictive hiring</span> — Observe candidates performing tasks they&apos;ll actually do on the job</li>
+                <li><span className="text-white font-medium">Secure platform</span> — Multi-tenant isolation with role-based access control for your team</li>
+                <li><span className="text-white font-medium">Flexible plans</span> — Scale resources based on your hiring volume and specific needs</li>
+                <li><span className="text-white font-medium">Analytics dashboard</span> — Track assessment metrics and hiring efficiency across your organization</li>
               </ul>
             </div>
 
             <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-800">
-              <div className="text-xl font-semibold mb-2 text-zinc-100">For Recruiters</div>
+              <div className="text-xl font-semibold mb-2 text-zinc-100">For Hiring Managers</div>
               <p className="text-zinc-300 mb-3">
                 <span className="text-indigo-400 font-medium">Craft assessments that truly predict job success.</span> Replace arbitrary coding exercises with meaningful technical challenges.
               </p>
               <ul className="list-disc pl-5 text-zinc-300 space-y-2">
-                <li><span className="text-white font-medium">Powerful templates</span> — Design multi-stage evaluations that reveal true capabilities</li>
-                <li><span className="text-white font-medium">Realistic simulation</span> — Create environments that mimic your production systems</li>
-                <li><span className="text-white font-medium">Automatic validation</span> — Let custom scripts objectively measure candidate performance</li>
-                <li><span className="text-white font-medium">Total control</span> — Configure every aspect from time limits to environment specifications</li>
+                <li><span className="text-white font-medium">Custom templates</span> — Design role-specific evaluations that measure relevant skills</li>
+                <li><span className="text-white font-medium">Realistic simulation</span> — Create environments that reflect your actual tech stack</li>
+                <li><span className="text-white font-medium">Scoring automation</span> — Define objective criteria for consistent candidate evaluation</li>
+                <li><span className="text-white font-medium">Time efficiency</span> — Reduce screening time while improving assessment quality</li>
               </ul>
             </div>
 
             <div className="p-4 border border-zinc-700 rounded-lg bg-zinc-800">
-              <div className="text-xl font-semibold mb-2 text-zinc-100">For Reviewers</div>
+              <div className="text-xl font-semibold mb-2 text-zinc-100">For Technical Evaluators</div>
               <p className="text-zinc-300 mb-3">
                 <span className="text-indigo-400 font-medium">See beyond the code to understand the engineer.</span> Gain unprecedented visibility into a candidate&apos;s problem-solving approach.
               </p>
