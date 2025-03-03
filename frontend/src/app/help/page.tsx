@@ -66,6 +66,34 @@ export default function HelpPage() {
     {
       question: "Can candidates see their results?",
       answer: "Yes, candidates can see their results based on the configuration set by the assessment creator. Post-test solution visibility settings can be configured according to your preferences."
+    },
+    {
+      question: "What machine tiers are available?",
+      answer: "We offer several machine tiers to match your needs: Basic (1 CPU, 2GB RAM, 20GB storage), Standard (2 CPU, 4GB RAM, 50GB storage), Performance (4 CPU, 8GB RAM, 80GB storage), and Custom configurations for Enterprise customers. Different tiers consume minutes at different rates."
+    },
+    {
+      question: "How does minute consumption work?",
+      answer: "Environment runtime is measured in minutes. Basic tier consumes at 0.5× the standard rate, Standard tier at 1.0× (baseline), and Performance tier at 2.0× the standard rate. Machine startup time is always free and doesn't count toward your included minutes."
+    },
+    {
+      question: "What happens if I exceed my monthly minutes?",
+      answer: "If you exceed your included minutes, overage rates apply: $0.20/min on Starter, $0.15/min on Team, and $0.10/min on Enterprise plans (for Standard tier machines). You'll always be notified before any charges are applied."
+    },
+    {
+      question: "How long can environments run?",
+      answer: "Environment runtime limits vary by plan: up to 2 hours on Starter, up to 8 hours on Team, and configurable durations on Enterprise plans. You can set shorter time limits for individual assessments as needed."
+    },
+    {
+      question: "How many assessments can I run per month?",
+      answer: "Starter plans include up to 10 assessments per month, Team plans include up to 40, and Enterprise plans offer unlimited assessments. These limits reset at the beginning of each billing cycle."
+    },
+    {
+      question: "How many team members can access the platform?",
+      answer: "Starter plans support up to 10 team members, while Team and Enterprise plans offer unlimited team member access with customizable role-based permissions."
+    },
+    {
+      question: "Can I upgrade or downgrade my plan?",
+      answer: "Yes, you can upgrade or downgrade your plan at any time. Upgrades take effect immediately, while downgrades take effect at the end of your current billing cycle. Prorated credits are applied when upgrading mid-cycle."
     }
   ];
 
