@@ -45,7 +45,7 @@ export default function HelpPage() {
     },
     {
       question: "What types of assessments can I create?",
-      answer: "You can create assessments for Kubernetes configuration, Linux systems administration, container orchestration, security hardening, and many other job-specific technical challenges."
+      answer: "You can create assessments for virtually any technical scenario you can imagine. Kubernetes configuration, Linux systems administration, container orchestration, security hardening are just examples. Since candidates are given access to a brand new machine that can be customized and prepared beforehand by your team, you have complete flexibility to create any type of assessment scenario that matches your hiring needs."
     },
     {
       question: "How does the pricing work?",
@@ -53,7 +53,7 @@ export default function HelpPage() {
     },
     {
       question: "How are environments provisioned?",
-      answer: "Environments are created on-demand with just-in-time provisioning before the assessment. They are isolated with proper network segmentation, resource-constrained with configurable limits, and automatically cleaned up after test completion."
+      answer: "Environments are created on-demand with just-in-time provisioning before the assessment. They are isolated with proper network segmentation, resource-constrained with configurable limits, and automatically cleaned up after test completion, and potentially snapshotted for future use."
     },
     {
       question: "Can I customize the assessment environments?",
@@ -61,7 +61,7 @@ export default function HelpPage() {
     },
     {
       question: "How is scoring handled?",
-      answer: "Technical recruiters can implement automatic scoring via multiple validation scripts, define score thresholds with weighted assessment components, and configure time-based bonus point allocation with configurable coefficients."
+      answer: "Technical recruiters can implement automatic scoring via multiple validation scripts, define score thresholds with weighted assessment components, and configure time-based bonus point allocation with configurable multipliers. Or you can do it the old way and score manually!"
     },
     {
       question: "Can candidates see their results?",
