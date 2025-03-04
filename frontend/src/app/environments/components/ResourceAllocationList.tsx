@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { BarChart, Settings, Clock, Play, Trash2, ListFilter } from 'lucide-react';
+import { BarChart, Settings, Clock, Play, Trash2, ListFilter, History } from 'lucide-react';
 
 // Mock data for resource allocation
 const mockResourceData = {
@@ -69,6 +69,107 @@ const mockResourceData = {
       status: 'Stopped',
     },
   ],
+  // Mock data for usage history
+  history: [
+    {
+      id: 'hist-1',
+      configId: 'env-1',
+      instanceId: 'k8s-cluster-001',
+      startTime: '2023-03-01T08:30:00Z',
+      endTime: '2023-03-01T13:45:00Z',
+      minutes: 315,
+      resources: {
+        cpu: 4,
+        memory: 8,
+        storage: 100,
+      },
+      tier: 'Performance',
+    },
+    {
+      id: 'hist-2',
+      configId: 'env-1',
+      instanceId: 'k8s-cluster-002',
+      startTime: '2023-03-01T14:30:00Z',
+      endTime: '2023-03-01T18:15:00Z',
+      minutes: 225,
+      resources: {
+        cpu: 4,
+        memory: 8,
+        storage: 100,
+      },
+      tier: 'Performance',
+    },
+    {
+      id: 'hist-3',
+      configId: 'env-2',
+      instanceId: 'linux-server-001',
+      startTime: '2023-03-01T09:00:00Z',
+      endTime: '2023-03-01T15:30:00Z',
+      minutes: 390,
+      resources: {
+        cpu: 2,
+        memory: 4,
+        storage: 50,
+      },
+      tier: 'Standard',
+    },
+    {
+      id: 'hist-4',
+      configId: 'env-3',
+      instanceId: 'docker-env-001',
+      startTime: '2023-03-01T10:15:00Z',
+      endTime: '2023-03-01T19:45:00Z',
+      minutes: 570,
+      resources: {
+        cpu: 2,
+        memory: 4,
+        storage: 50,
+      },
+      tier: 'Standard',
+    },
+    {
+      id: 'hist-5',
+      configId: 'env-4',
+      instanceId: 'cloud-dev-001',
+      startTime: '2023-02-28T14:00:00Z',
+      endTime: '2023-02-28T19:00:00Z',
+      minutes: 300,
+      resources: {
+        cpu: 1,
+        memory: 2,
+        storage: 20,
+      },
+      tier: 'Basic',
+    },
+    {
+      id: 'hist-6',
+      configId: 'env-2',
+      instanceId: 'linux-server-002',
+      startTime: '2023-02-28T08:45:00Z',
+      endTime: '2023-02-28T09:30:00Z',
+      minutes: 45,
+      resources: {
+        cpu: 2,
+        memory: 4,
+        storage: 50,
+      },
+      tier: 'Standard',
+    },
+    {
+      id: 'hist-7',
+      configId: 'env-3',
+      instanceId: 'docker-env-002',
+      startTime: '2023-02-27T13:20:00Z',
+      endTime: '2023-02-27T13:30:00Z',
+      minutes: 10,
+      resources: {
+        cpu: 2,
+        memory: 4,
+        storage: 50,
+      },
+      tier: 'Standard',
+    },
+  ],
   // Mock data for usage over time
   usageHistory: {
     "7d": [
@@ -102,7 +203,9 @@ const mockResourceData = {
 export function ResourceAllocationList() {
   const [resourceData] = useState(mockResourceData);
   const [view, setView] = useState('table');
-  const [timeframe, setTimeframe] = useState('7d');
+  const [timeframe, setView2] = useState('7d');
+  const [historyPage, setHistoryPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Calculate the percentage used for minutes
   const minutesPercentage = (resourceData.summary.minutes.used / resourceData.summary.minutes.total) * 100;
@@ -120,6 +223,22 @@ export function ResourceAllocationList() {
     const minutes = totalMinutes % 60;
     return `${hours}h ${minutes > 0 ? minutes + 'm' : '0m'}`;
   }
+
+  // Format ISO date to readable format
+  function formatDate(dateString: string) {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  // Get paginated history items
+  const paginatedHistory = resourceData.history.slice(
+    (historyPage - 1) * itemsPerPage,
+    historyPage * itemsPerPage
+  );
 
   return (
     <div className="space-y-6">
@@ -178,68 +297,151 @@ export function ResourceAllocationList() {
 
       {/* Environment Resource Table/Chart View */}
       {view === 'table' ? (
-        <Card className="bg-zinc-900 border-zinc-800">
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-zinc-900">
-                  <TableHead className="text-zinc-400">Environment</TableHead>
-                  <TableHead className="text-zinc-400">Tier</TableHead>
-                  <TableHead className="text-zinc-400">CPU</TableHead>
-                  <TableHead className="text-zinc-400">Memory</TableHead>
-                  <TableHead className="text-zinc-400">Storage</TableHead>
-                  <TableHead className="text-zinc-400">Minutes Used</TableHead>
-                  <TableHead className="text-zinc-400">Status</TableHead>
-                  <TableHead className="text-zinc-400">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {resourceData.environments.map((env) => (
-                  <TableRow key={env.id} className="border-zinc-800 hover:bg-zinc-800">
-                    <TableCell className="font-medium text-zinc-100">{env.name}</TableCell>
-                    <TableCell className="text-zinc-300">{env.tier}</TableCell>
-                    <TableCell className="text-zinc-300">{env.resources.cpu} cores</TableCell>
-                    <TableCell className="text-zinc-300">{env.resources.memory} GB</TableCell>
-                    <TableCell className="text-zinc-300">{env.resources.storage} GB</TableCell>
-                    <TableCell className="text-zinc-300">
-                      <div className="flex items-center gap-1">
-                        <Clock className="h-3 w-3 text-zinc-400" />
-                        {formatMinutes(env.minutes)}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-zinc-300">
-                      <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
-                        env.status === 'Running' ? 'bg-green-500' : 'bg-zinc-500'
-                      }`}></span>
-                      {env.status}
-                    </TableCell>
-                    <TableCell>
-                      {env.status === 'Running' ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 text-zinc-400 hover:text-red-500 hover:bg-red-950/30"
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
-                        </Button>
-                      ) : (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 px-2 text-zinc-400 hover:text-green-500 hover:bg-green-950/30"
-                        >
-                          <Play className="h-4 w-4 mr-1" />
-                          Start
-                        </Button>
-                      )}
-                    </TableCell>
+        <div className="space-y-6">
+          {/* Summary Table */}
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-zinc-800 hover:bg-zinc-900">
+                    <TableHead className="text-zinc-400">Environment</TableHead>
+                    <TableHead className="text-zinc-400">Tier</TableHead>
+                    <TableHead className="text-zinc-400">CPU</TableHead>
+                    <TableHead className="text-zinc-400">Memory</TableHead>
+                    <TableHead className="text-zinc-400">Storage</TableHead>
+                    <TableHead className="text-zinc-400">Minutes Used</TableHead>
+                    <TableHead className="text-zinc-400">Status</TableHead>
+                    <TableHead className="text-zinc-400">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+                </TableHeader>
+                <TableBody>
+                  {resourceData.environments.map((env) => (
+                    <TableRow key={env.id} className="border-zinc-800 hover:bg-zinc-800">
+                      <TableCell className="font-medium text-zinc-100">{env.name}</TableCell>
+                      <TableCell className="text-zinc-300">{env.tier}</TableCell>
+                      <TableCell className="text-zinc-300">{env.resources.cpu} cores</TableCell>
+                      <TableCell className="text-zinc-300">{env.resources.memory} GB</TableCell>
+                      <TableCell className="text-zinc-300">{env.resources.storage} GB</TableCell>
+                      <TableCell className="text-zinc-300">
+                        <div className="flex items-center gap-1">
+                          <Clock className="h-3 w-3 text-zinc-400" />
+                          {formatMinutes(env.minutes)}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-zinc-300">
+                        <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                          env.status === 'Running' ? 'bg-green-500' : 'bg-zinc-500'
+                        }`}></span>
+                        {env.status}
+                      </TableCell>
+                      <TableCell>
+                        {env.status === 'Running' ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-zinc-400 hover:text-red-500 hover:bg-red-950/30"
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" />
+                            Delete
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 px-2 text-zinc-400 hover:text-green-500 hover:bg-green-950/30"
+                          >
+                            <Play className="h-4 w-4 mr-1" />
+                            Start
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+
+          {/* History Section */}
+          <div className="mt-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-medium text-zinc-100 flex items-center gap-2">
+                <History className="h-4 w-4" />
+                Usage History
+              </h3>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setHistoryPage(Math.max(1, historyPage - 1))}
+                  disabled={historyPage === 1}
+                >
+                  Previous
+                </Button>
+                <span className="flex items-center px-3 text-sm text-zinc-400">
+                  Page {historyPage} of {Math.ceil(resourceData.history.length / itemsPerPage)}
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setHistoryPage(Math.min(Math.ceil(resourceData.history.length / itemsPerPage), historyPage + 1))}
+                  disabled={historyPage >= Math.ceil(resourceData.history.length / itemsPerPage)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardContent className="p-0">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-zinc-800 hover:bg-zinc-900">
+                      <TableHead className="text-zinc-400">Environment</TableHead>
+                      <TableHead className="text-zinc-400">Instance ID</TableHead>
+                      <TableHead className="text-zinc-400">Start Time</TableHead>
+                      <TableHead className="text-zinc-400">End Time</TableHead>
+                      <TableHead className="text-zinc-400">Resources</TableHead>
+                      <TableHead className="text-zinc-400">Minutes Used</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedHistory.map((history) => {
+                      // Find the corresponding environment
+                      const env = resourceData.environments.find(e => e.id === history.configId);
+                      return (
+                        <TableRow key={history.id} className="border-zinc-800 hover:bg-zinc-800">
+                          <TableCell className="font-medium text-zinc-100">
+                            {env?.name || 'Unknown Environment'}
+                          </TableCell>
+                          <TableCell className="text-zinc-300">
+                            <span className="font-mono text-xs bg-zinc-800 py-0.5 px-1.5 rounded">
+                              {history.instanceId}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-zinc-300">{formatDate(history.startTime)}</TableCell>
+                          <TableCell className="text-zinc-300">{formatDate(history.endTime)}</TableCell>
+                          <TableCell className="text-zinc-300">
+                            <div className="flex flex-col gap-0.5">
+                              <span className="text-xs">{history.resources.cpu} CPU, {history.resources.memory} GB RAM</span>
+                              <span className="text-xs">{history.resources.storage} GB Storage</span>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-zinc-300">
+                            <div className="flex items-center gap-1">
+                              <Clock className="h-3 w-3 text-zinc-400" />
+                              {formatMinutes(history.minutes)}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       ) : (
         <Card className="bg-zinc-900 border-zinc-800 p-6">
           <div className="flex justify-between items-center mb-6">
@@ -248,21 +450,21 @@ export function ResourceAllocationList() {
               <Button
                 size="sm"
                 variant={timeframe === '7d' ? 'default' : 'outline'}
-                onClick={() => setTimeframe('7d')}
+                onClick={() => setView2('7d')}
               >
                 7d
               </Button>
               <Button
                 size="sm"
                 variant={timeframe === '30d' ? 'default' : 'outline'}
-                onClick={() => setTimeframe('30d')}
+                onClick={() => setView2('30d')}
               >
                 30d
               </Button>
               <Button
                 size="sm"
                 variant={timeframe === '90d' ? 'default' : 'outline'}
-                onClick={() => setTimeframe('90d')}
+                onClick={() => setView2('90d')}
               >
                 90d
               </Button>
