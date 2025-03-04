@@ -1,9 +1,4 @@
 import Link from 'next/link';
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Login - Qualifyd',
-};
 
 export default function Login() {
   return (
