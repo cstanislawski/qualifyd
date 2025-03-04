@@ -48,7 +48,7 @@ export default function UserMenu() {
       <div className="ml-3 relative" ref={menuRef}>
         <div>
           <button
-            className="bg-zinc-800 rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            className="bg-zinc-800 px-3 py-1.5 rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             id="user-menu"
             aria-expanded={isOpen}
             aria-haspopup="true"
@@ -56,8 +56,8 @@ export default function UserMenu() {
           >
             <span className="sr-only">Open user menu</span>
             <span className="inline-flex items-center">
-              <span className="mr-2 text-zinc-300">{user?.name}</span>
-              <span className="inline-block h-8 w-8 rounded-full overflow-hidden bg-zinc-700">
+              <span className="text-zinc-300 whitespace-nowrap overflow-hidden text-ellipsis max-w-[150px]">{user?.name}</span>
+              <span className="ml-2 inline-flex h-8 w-8 flex-shrink-0 rounded-full overflow-hidden bg-zinc-700">
                 <svg className="h-full w-full text-zinc-400" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
                 </svg>
@@ -73,6 +73,7 @@ export default function UserMenu() {
             aria-labelledby="user-menu">
             <div className="px-4 py-3 text-sm text-zinc-500 border-b border-zinc-700">
               <p className="mb-1">Signed in as:</p>
+              <p className="font-medium text-zinc-400 break-words">{user?.name}</p>
               <p className="font-medium text-zinc-400 break-words">{user?.email}</p>
               <div className="mt-2 text-xs inline-flex items-center font-medium bg-indigo-900/30 text-indigo-400 rounded-full px-2 py-1">
                 {user?.role}
