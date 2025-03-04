@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { EnvironmentConfigList } from './components/EnvironmentConfigList';
 import { ResourceAllocationList } from './components/ResourceAllocationList';
-import { CustomImagesList } from './components/CustomImagesList';
+import { CustomImagesList } from './components/ImagesList';
 import { EnvironmentMonitoring } from './components/EnvironmentMonitoring';
 
 export default function EnvironmentsPage() {
@@ -25,7 +25,7 @@ export default function EnvironmentsPage() {
         <TabsList className="grid w-full grid-cols-4 mb-8">
           <TabsTrigger value="environment-config">Configuration</TabsTrigger>
           <TabsTrigger value="resource-allocation">Resource Allocation</TabsTrigger>
-          <TabsTrigger value="custom-images">Custom Images</TabsTrigger>
+          <TabsTrigger value="images">Images</TabsTrigger>
           <TabsTrigger value="monitoring">Monitoring</TabsTrigger>
         </TabsList>
 
@@ -37,7 +37,7 @@ export default function EnvironmentsPage() {
           <ResourceAllocationList />
         </TabsContent>
 
-        <TabsContent value="custom-images" className="mt-6">
+        <TabsContent value="images" className="mt-6">
           <CustomImagesList />
         </TabsContent>
 
