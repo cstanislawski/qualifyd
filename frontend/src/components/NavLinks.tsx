@@ -2,20 +2,50 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/utils/auth';
 
 export default function NavLinks() {
   const pathname = usePathname();
+  const { isLoggedIn, isCompanyUser, isCandidate } = useAuth();
 
-  const navLinks = [
+  // Public links - always visible
+  const publicLinks = [
     { href: '/', label: 'Home' },
-    { href: '/pricing', label: 'Pricing' },
     { href: '/help', label: 'Help' },
-    { href: '/candidate/assessments', label: 'Assessments' },
+  ];
+
+  // Only visible to non-logged-in users
+  const nonLoggedInLinks = [
+    { href: '/pricing', label: 'Pricing' },
+  ];
+
+  // Only visible to logged-in company users
+  const companyLinks = [
     { href: '/admin', label: 'Admin' },
     { href: '/team', label: 'Team' },
     { href: '/templates', label: 'Templates' },
-    { href: '/environments', label: 'Environments' }
+    { href: '/environments', label: 'Environments' },
   ];
+
+  // Assessment link is shown to all logged-in users, with label based on user role
+  const assessmentLink = {
+    href: '/assessments',
+    label: isCandidate() ? 'My Assessments' : 'Assessments'
+  };
+
+  // Combine links based on authentication status and user role
+  let navLinks = [...publicLinks];
+
+  if (!isLoggedIn) {
+    navLinks = [...navLinks, ...nonLoggedInLinks];
+  } else {
+    navLinks = [...navLinks, assessmentLink];
+
+    // Add company-specific links for company users
+    if (isCompanyUser()) {
+      navLinks = [...navLinks, ...companyLinks];
+    }
+  }
 
   return (
     <>

@@ -1,6 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
+  // Environment variables that will be available to the browser
+  env: {
+    NEXT_PUBLIC_APP_ENV: process.env.APP_ENV || 'production',
+  },
   // Properly handle code that should only run in the browser
   serverExternalPackages: [],
   webpack: (config, { isServer }) => {

@@ -1,11 +1,27 @@
-import Link from 'next/link';
-import { Metadata } from 'next';
+'use client';
 
-export const metadata: Metadata = {
-  title: 'Admin Dashboard - Qualifyd',
-};
+import { useEffect } from 'react';
+import { useAuth } from '@/utils/auth';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function AdminDashboard() {
+  const { isLoggedIn, isCompanyUser } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    // Check authentication
+    if (!isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+
+    if (!isCompanyUser()) {
+      router.push('/');
+      return;
+    }
+  }, [isLoggedIn, isCompanyUser, router]);
+
   // This would be fetched from an API in a real implementation
   const statistics = {
     assessmentTemplates: 9,
@@ -138,11 +154,11 @@ export default function AdminDashboard() {
           <Link href="/admin/assessments/new" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
             New Assessment
           </Link>
-          <Link href="/admin/templates/assessments/new" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            New Assessment Template
-          </Link>
           <Link href="/admin/templates/tasks/new" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
             New Task Template
+          </Link>
+          <Link href="/admin/templates/assessments/new" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            New Assessment Template
           </Link>
         </div>
       </div>

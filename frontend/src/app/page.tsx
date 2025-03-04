@@ -1,7 +1,22 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/utils/auth';
 import RolesCarousel from '../components/RolesCarousel';
 
 export default function Home() {
+  const router = useRouter();
+  const { isLoggedIn, isCandidate } = useAuth();
+
+  // Redirect candidates to assessments page
+  useEffect(() => {
+    if (isLoggedIn && isCandidate()) {
+      router.push('/assessments');
+    }
+  }, [isLoggedIn, isCandidate, router]);
+
   return (
     <>
       {/* Enhanced Hero Section with Animated Elements */}
