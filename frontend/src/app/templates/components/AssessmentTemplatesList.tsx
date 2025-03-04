@@ -99,87 +99,95 @@ export function AssessmentTemplatesList() {
         </Link>
       </div>
 
-      <div className="bg-zinc-800 rounded-md overflow-hidden">
-        <table className="min-w-full divide-y divide-zinc-700">
-          <thead className="bg-zinc-900">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                Name
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                Tasks
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                Duration
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                Last Updated
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                Version
-              </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                Source
-              </th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-zinc-400 uppercase tracking-wider">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-zinc-800 divide-y divide-zinc-700">
-            {filteredTemplates.map((template) => (
-              <tr key={template.id} className="hover:bg-zinc-750">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div>
-                      <div className="text-sm font-medium text-zinc-200">
-                        <Link href={`/templates/assessment/${template.id}`}>{template.name}</Link>
-                      </div>
-                      <div className="text-sm text-zinc-400">{template.description}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
-                  {template.taskCount}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
-                  {template.estimatedDuration}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
-                  {new Date(template.updatedAt).toLocaleDateString()}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
-                  v{template.version}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
-                  {template.clonedFrom ? (
-                    <Link href={`/templates/assessment/${template.clonedFrom}`} className="text-indigo-400 hover:text-indigo-300">
-                      Cloned from Template #{template.clonedFrom}
-                    </Link>
-                  ) : 'Original'}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex justify-end space-x-2">
-                    <button
-                      onClick={() => handleCloneTemplate(template.id)}
-                      className="text-indigo-400 hover:text-indigo-300"
-                      title="Clone template"
-                    >
-                      <ClipboardCopyIcon className="h-5 w-5" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteTemplate(template.id)}
-                      className="text-red-400 hover:text-red-300"
-                      title="Delete template"
-                    >
-                      <TrashIcon className="h-5 w-5" />
-                    </button>
-                  </div>
-                </td>
+      <div className="overflow-x-auto">
+        <div className="bg-zinc-800 rounded-md overflow-hidden min-w-[1024px]">
+          <table className="min-w-full divide-y divide-zinc-700">
+            <thead className="bg-zinc-900">
+              <tr>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider w-1/4 min-w-[200px]">
+                  Name
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider w-1/12 min-w-[100px]">
+                  Tasks
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider w-1/12 min-w-[100px]">
+                  Duration
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider w-1/8 min-w-[120px]">
+                  Last Updated
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider w-1/12 min-w-[80px]">
+                  Version
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider w-1/8 min-w-[100px]">
+                  Created By
+                </th>
+                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-zinc-400 uppercase tracking-wider w-1/8 min-w-[100px]">
+                  Source
+                </th>
+                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-zinc-400 uppercase tracking-wider w-1/12 min-w-[80px]">
+                  Actions
+                </th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="bg-zinc-800 divide-y divide-zinc-700">
+              {filteredTemplates.map((template) => (
+                <tr key={template.id} className="hover:bg-zinc-750">
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center">
+                      <div>
+                        <div className="text-sm font-medium text-zinc-200">
+                          <Link href={`/templates/assessment/${template.id}`}>{template.name}</Link>
+                        </div>
+                        <div className="text-sm text-zinc-400">{template.description}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
+                    {template.taskCount}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
+                    {template.estimatedDuration}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
+                    {new Date(template.updatedAt).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
+                    v{template.version}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
+                    {template.createdBy}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-zinc-300">
+                    {template.clonedFrom ? (
+                      <Link href={`/templates/assessment/${template.clonedFrom}`} className="text-indigo-400 hover:text-indigo-300">
+                        Cloned from Template #{template.clonedFrom}
+                      </Link>
+                    ) : 'Original'}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                    <div className="flex justify-end space-x-2">
+                      <button
+                        onClick={() => handleCloneTemplate(template.id)}
+                        className="text-indigo-400 hover:text-indigo-300"
+                        title="Clone template"
+                      >
+                        <ClipboardCopyIcon className="h-5 w-5" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTemplate(template.id)}
+                        className="text-red-400 hover:text-red-300"
+                        title="Delete template"
+                      >
+                        <TrashIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

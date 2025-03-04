@@ -116,7 +116,7 @@ export default function TaskTemplateDetailPage() {
           </span>
           <ClockIcon className="h-4 w-4 mr-1" />
           <span className="text-sm mr-4">
-            Updated {new Date(template.updatedAt).toLocaleDateString()}
+            Updated {new Date(template.updatedAt).toLocaleString()}
           </span>
           <span className="text-sm">
             Created by {template.createdBy}
@@ -190,7 +190,7 @@ export default function TaskTemplateDetailPage() {
                           v{version.version}
                         </span>
                         <span className="text-sm text-zinc-300">
-                          {new Date(version.updatedAt).toLocaleDateString()} by {version.updatedBy}
+                          {new Date(version.updatedAt).toLocaleString()} by {version.updatedBy}
                         </span>
                       </div>
                       {version.version !== template.version && (
