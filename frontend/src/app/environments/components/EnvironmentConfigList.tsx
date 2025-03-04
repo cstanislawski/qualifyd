@@ -35,6 +35,15 @@ const mockEnvironmentConfigs = [
     lastUsed: '2023-02-25T11:10:00Z',
     createdAt: '2023-01-05T10:15:00Z',
   },
+  {
+    id: 'env-4',
+    name: 'Cloud Development',
+    description: 'Cloud Development environment with common tools pre-installed',
+    type: 'linux',
+    status: 'active',
+    lastUsed: '2023-02-25T11:10:00Z',
+    createdAt: '2023-01-05T10:15:00Z',
+  },
 ];
 
 export function EnvironmentConfigList() {
@@ -78,7 +87,11 @@ export function EnvironmentConfigList() {
               </div>
             </CardContent>
             <CardFooter className="flex justify-end gap-2">
-              <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-zinc-100">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-zinc-400 hover:text-red-500 hover:bg-red-950/30 transition-colors"
+              >
                 <Trash2 className="h-4 w-4 mr-1" />
                 Delete
               </Button>
