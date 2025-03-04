@@ -72,12 +72,13 @@ export default function UserMenu() {
             aria-orientation="vertical"
             aria-labelledby="user-menu">
             <div className="px-4 py-3 text-sm text-zinc-500 border-b border-zinc-700">
-              <p className="mb-1">Signed in as:</p>
-              <p className="font-medium text-zinc-400 break-words">{user?.name}</p>
-              <p className="font-medium text-zinc-400 break-words">{user?.email}</p>
-              <div className="mt-2 text-xs inline-flex items-center font-medium bg-indigo-900/30 text-indigo-400 rounded-full px-2 py-1">
-                {user?.role}
+              <div className="flex items-center mb-2">
+                <p className="text-zinc-500">Signed in as:</p>
+                <div className="ml-2 text-xs inline-flex items-center font-medium bg-indigo-900/30 text-indigo-400 rounded-full px-2 py-1">
+                  {user?.role}
+                </div>
               </div>
+              <p className="font-medium text-zinc-400 break-words">{user?.email}</p>
             </div>
             <Link
               href="/profile"

@@ -147,7 +147,7 @@ export default function AssessmentsPage() {
       {isCompanyUser() && (
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
-            <h1 className="text-2xl font-bold text-zinc-100">Company Assessments</h1>
+            <h1 className="text-2xl font-bold text-zinc-100">Assessments</h1>
             <button className="bg-indigo-600 hover:bg-indigo-700 text-white py-2 px-4 rounded-md text-sm">
               Create New Assessment
             </button>

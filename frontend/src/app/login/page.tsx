@@ -10,7 +10,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, isCandidate } = useAuth();
+  const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,12 +20,8 @@ export default function Login() {
 
     try {
       await login(email, password);
-      // Redirect to assessments page for candidates, home page for others
-      if (isCandidate()) {
-        router.push('/assessments');
-      } else {
-        router.push('/');
-      }
+      // Redirect all users to assessments page after login
+      router.push('/assessments');
     } catch (err) {
       console.error('Login error:', err);
       setError('Invalid email or password');
