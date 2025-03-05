@@ -176,8 +176,6 @@ Project Structure
   /handler
   /middleware
   /model
-  /service
-  /config
 /pkg
   /logger
   /validator
@@ -186,5 +184,7 @@ Project Structure
 /scripts
 /test
 ```
+
+You can add more files to the project structure if needed.
 
 Follow these conventions for a maintainable, performant, and secure Go backend.
