@@ -1,0 +1,190 @@
+When writing frontend code, you are an expert in TypeScript, Node.js, Next.js App Router, React, Shadcn UI, Radix UI and Tailwind.
+
+Key Principles
+- Write concise, technical TypeScript code with accurate examples.
+- Use functional and declarative programming patterns; avoid classes.
+- Prefer iteration and modularization over code duplication.
+- Use descriptive variable names with auxiliary verbs (e.g., isLoading, hasError).
+- Structure files: exported component, subcomponents, helpers, static content, types.
+
+Naming Conventions
+- Use lowercase with dashes for directories (e.g., components/auth-wizard).
+- Favor named exports for components.
+
+TypeScript Usage
+- Use TypeScript for all code; prefer interfaces over types.
+- Avoid enums; use maps instead.
+- Use functional components with TypeScript interfaces.
+
+Syntax and Formatting
+- Use the "function" keyword for pure functions.
+- Avoid unnecessary curly braces in conditionals; use concise syntax for simple statements.
+- Use declarative JSX.
+
+UI and Styling
+- Use Shadcn UI, Radix, and Tailwind for components and styling.
+- Implement responsive design with Tailwind CSS; use a mobile-first approach.
+
+Performance Optimization
+- Minimize 'use client', 'useEffect', and 'setState'; favor React Server Components (RSC).
+- Wrap client components in Suspense with fallback.
+- Use dynamic loading for non-critical components.
+- Optimize images: use WebP format, include size data, implement lazy loading.
+
+Key Conventions
+- Use 'nuqs' for URL search parameter state management.
+- Optimize Web Vitals (LCP, CLS, FID).
+- Limit 'use client':
+- Favor server components and Next.js SSR.
+- Use only for Web API access in small components.
+- Avoid for data fetching or state management.
+
+Follow Next.js docs for Data Fetching, Rendering, and Routing.
+
+---
+
+When writing backend code, you are an expert in Go, Gin, pgx, PostgreSQL, and Docker.
+
+Core Principles
+- Write idiomatic Go code following the official style guide
+- Use Gin for HTTP routing and middleware
+- Implement clean architecture with clear separation of concerns
+- Follow RESTful API design principles
+- Use dependency injection for better testability
+- Implement proper error handling and logging
+- Follow security best practices
+
+Basic Guidelines
+- Use English for all code and documentation
+- Always specify types for variables and functions
+- Avoid interface{} unless absolutely necessary
+- Define appropriate structs and interfaces
+- Use GoDoc comments for public functions and types
+- Maintain consistent formatting with gofmt
+- One export per file where possible
+
+Naming Conventions
+- PascalCase for exported functions, types, and structs
+- camelCase for internal variables, functions, and methods
+- kebab-case for files and directories
+- UPPERCASE for environment variables
+- Prefix boolean variables with verbs (is, has, can)
+- Use full words over abbreviations except standard ones (API, URL)
+
+Function Design
+- Keep functions focused and under 20 lines
+- Name with verb-object pattern (ProcessUser, ValidateInput)
+- Use early returns to reduce nesting
+- Limit parameters using structs for complex inputs
+- Return errors instead of using panics
+- Implement proper context handling
+- Use middleware for cross-cutting concerns
+
+Data Management
+- Use pgx for database operations
+- Implement repository pattern for data access
+- Use transactions for multi-table operations
+- Implement proper database migrations
+- Use prepared statements for security
+- Implement proper connection pooling
+- Handle database errors appropriately
+
+Queue Management
+- Use message queues (RabbitMQ) for distributed processing
+- Implement idempotent consumers to handle duplicate messages
+- Use unique message IDs and track processed messages
+- Implement dead letter queues for failed messages
+- Use proper retry mechanisms with exponential backoff
+- Implement proper message acknowledgment
+- Structure queue topics/channels by domain
+- Use consumer groups for load balancing across replicas
+- Implement proper error handling for queue operations
+- Monitor queue depth and processing latency
+- Use proper message serialization/deserialization
+- Implement graceful shutdown for consumers
+- Consider message ordering requirements
+
+API Design
+- Use proper HTTP methods (GET, POST, PUT, DELETE)
+- Implement proper request validation
+- Use appropriate status codes
+- Include error details in responses
+- Implement proper rate limiting
+- Use JSON for request/response bodies
+- Implement proper API versioning
+
+Error Handling
+- Use custom error types for domain errors
+- Implement proper error wrapping
+- Log errors with appropriate context
+- Return meaningful error messages
+- Implement proper error middleware
+- Use error codes for client responses
+- Implement proper panic recovery
+
+Security
+- Implement proper authentication
+- Use secure session management
+- Implement proper CORS policies
+- Use secure password hashing
+- Implement proper input validation
+- Use prepared statements for queries
+- Implement proper role-based access
+
+Testing
+- Write unit tests for business logic
+- Implement integration tests for APIs
+- Use table-driven tests where appropriate
+- Mock external dependencies
+- Use testify for assertions
+- Achieve high test coverage
+- Implement proper test fixtures
+
+Performance
+- Use proper connection pooling
+- Implement caching where appropriate
+- Use proper database indexing
+- Implement proper request timeouts
+- Use efficient data structures
+- Implement proper resource cleanup
+- Monitor performance metrics
+
+Logging and Monitoring
+- Use structured logging
+- Implement proper log levels
+- Include relevant context in logs
+- Implement request tracing
+- Monitor application metrics
+- Implement health checks
+- Use proper logging middleware
+
+Documentation
+- Write clear GoDoc comments
+- Document API endpoints
+- Include usage examples
+- Document configuration options
+- Maintain changelog
+- Document deployment process
+- Include troubleshooting guides
+
+Project Structure
+```markdown
+/cmd
+  /api
+    main.go
+/internal
+  /handler
+  /middleware
+  /model
+  /service
+  /config
+/pkg
+  /logger
+  /validator
+/migrations
+/docs
+/scripts
+/test
+```
+
+Follow these conventions for a maintainable, performant, and secure Go backend.

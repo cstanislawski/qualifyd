@@ -199,6 +199,6 @@ Technology stack:
 - Frontend: [Next.js](https://github.com/vercel/next.js/) + [TailwindCSS](https://github.com/tailwindlabs/tailwindcss) + [shadcn/ui](https://ui.shadcn.com/)
 - Backend: Go + [Chi](https://github.com/go-chi/chi) for the API + [jackc/pgx](https://github.com/jackc/pgx) for the database
 - Database: PostgreSQL
-- Queue system: TBD
+- Queue system: RabbitMQ
 
 The infrastructure should be deployed in GCP's GKE. The environments users will be using should be deployed via `KubeVirt`, which will deploy the virtual machines in the same GKE cluster.
