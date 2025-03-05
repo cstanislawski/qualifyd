@@ -67,10 +67,6 @@ helm upgrade --install \
   --values k8s/local/values/rabbitmq-values.yaml \
   --version 12.6.1
 
-# Apply backend manifests
-echo "Applying backend manifests..."
-kubectl apply -f k8s/local/manifests/backend/
-
 # Wait for ingress-nginx to be ready
 echo "Waiting for ingress-nginx to be ready..."
 kubectl wait --namespace ingress-nginx \
