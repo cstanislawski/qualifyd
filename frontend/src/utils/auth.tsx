@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 // Define user roles
-export type UserRole = 'candidate' | 'company' | 'admin' | null;
+export type UserRole = 'candidate' | 'admin' | 'editor' | 'viewer' | null;
 
 // User information interface
 export interface User {
@@ -45,6 +45,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check if we're in development mode
   const isDev = process.env.NEXT_PUBLIC_APP_ENV === 'dev';
+  console.log('NEXT_PUBLIC_APP_ENV:', process.env.NEXT_PUBLIC_APP_ENV);
+  console.log('isDev:', isDev);
+
+  // Development mode credentials
+  const DEV_CREDENTIALS = {
+    'candidate@example.com': { password: 'candidate', role: 'candidate' as const, name: 'Candidate', id: '1' },
+    'admin@example.com': { password: 'admin', role: 'admin' as const, name: 'Admin', id: '2' },
+    'editor@example.com': { password: 'editor', role: 'editor' as const, name: 'Editor', id: '3' },
+    'viewer@example.com': { password: 'viewer', role: 'viewer' as const, name: 'Viewer', id: '4' },
+  };
 
   // Check if user is logged in on component mount
   useEffect(() => {
@@ -73,58 +83,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setIsLoading(true);
+      console.log('Login attempt:', { email, password, isDev });
 
-      // In a real app, you would make an API call to authenticate
-      // For demo purposes, we'll simulate a successful login
+      // Always use development mode for now since production is not implemented
+      console.log('Using development mode credentials');
+      const emailLower = email.toLowerCase();
+      const credentials = DEV_CREDENTIALS[emailLower];
 
-      // Development mode credentials
-      if (isDev) {
-        // Development credential mapping - use email/password combinations
-        const devCredentials: { [key: string]: UserRole } = {
-          'candidate@example.com': 'candidate',
-          'admin@example.com': 'company',     // Admin role is just a special company user
-          'editor@example.com': 'company',
-          'viewer@example.com': 'company',
+      if (credentials && credentials.password === password) {
+        const userData = {
+          id: credentials.id,
+          email: emailLower,
+          name: credentials.name,
+          role: credentials.role,
         };
-
-        // Check if the provided email matches any of our dev credentials
-        if (devCredentials[email.toLowerCase()] && password === email.split('@')[0].toLowerCase()) {
-          // Generate a suitable name for display
-          const username = email.split('@')[0];
-          const displayName = username.charAt(0).toUpperCase() + username.slice(1);
-
-          const userData: User = {
-            id: Math.random().toString(36).substring(2, 15),
-            email,
-            name: displayName,
-            role: devCredentials[email.toLowerCase()],
-          };
-
-          localStorage.setItem('user', JSON.stringify(userData));
-          setUser(userData);
-          return;
-        }
+        setUser(userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        return;
       }
 
-      // Regular login logic (for production or fallback)
-      // Simulating different user roles based on email
-      let role: UserRole = 'company';
-      if (email.includes('candidate')) {
-        role = 'candidate';
-      } else if (email.includes('admin')) {
-        role = 'admin';
-      }
-
-      const userData: User = {
-        id: '123',
-        email,
-        name: email.split('@')[0],
-        role,
-      };
-
-      // Store user data
-      localStorage.setItem('user', JSON.stringify(userData));
-      setUser(userData);
+      throw new Error('Invalid email or password');
     } catch (error) {
       console.error('Login failed:', error);
       throw error;
@@ -141,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Helper functions to check user roles
   const isCompanyUser = () => {
-    return user?.role === 'company' || user?.role === 'admin';
+    return user?.role === 'admin' || user?.role === 'editor' || user?.role === 'viewer';
   };
 
   const isCandidate = () => {
