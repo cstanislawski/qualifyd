@@ -15,6 +15,17 @@ helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 helm repo add bitnami https://charts.bitnami.com/bitnami
 helm repo update
 
+# Function to check if a Helm release exists
+helm_release_exists() {
+    local release=$1
+    local namespace=$2
+    if helm status "$release" -n "$namespace" &> /dev/null; then
+        return 0
+    else
+        return 1
+    fi
+}
+
 # Create namespace for ingress-nginx
 echo "Creating ingress-nginx namespace..."
 kubectl create namespace ingress-nginx --dry-run=client -o yaml | kubectl apply -f -
@@ -39,33 +50,45 @@ else
     echo "TLS secret already exists"
 fi
 
-# Install ingress-nginx using Helm
-echo "Installing ingress-nginx using Helm..."
-helm upgrade --install \
-  ingress-nginx ingress-nginx/ingress-nginx \
-  --namespace ingress-nginx \
-  --values k8s/local/values/ingress-nginx-values.yaml \
-  --version 4.9.1
+# Install ingress-nginx using Helm if not already installed
+if ! helm_release_exists "ingress-nginx" "ingress-nginx"; then
+    echo "Installing ingress-nginx using Helm..."
+    helm upgrade --install \
+      ingress-nginx ingress-nginx/ingress-nginx \
+      --namespace ingress-nginx \
+      --values k8s/local/values/ingress-nginx-values.yaml \
+      --version 4.9.1
+else
+    echo "ingress-nginx is already installed"
+fi
 
 # Create application namespace
 echo "Creating application namespace..."
 kubectl create namespace qualifyd-dev --dry-run=client -o yaml | kubectl apply -f -
 
-# Install PostgreSQL using Helm
-echo "Installing PostgreSQL using Helm..."
-helm upgrade --install \
-  postgresql bitnami/postgresql \
-  --namespace qualifyd-dev \
-  --values k8s/local/values/postgresql-values.yaml \
-  --version 13.2.24
+# Install PostgreSQL using Helm if not already installed
+if ! helm_release_exists "postgresql" "qualifyd-dev"; then
+    echo "Installing PostgreSQL using Helm..."
+    helm upgrade --install \
+      postgresql bitnami/postgresql \
+      --namespace qualifyd-dev \
+      --values k8s/local/values/postgresql-values.yaml \
+      --version 13.2.24
+else
+    echo "PostgreSQL is already installed"
+fi
 
-# Install RabbitMQ using Helm
-echo "Installing RabbitMQ using Helm..."
-helm upgrade --install \
-  rabbitmq bitnami/rabbitmq \
-  --namespace qualifyd-dev \
-  --values k8s/local/values/rabbitmq-values.yaml \
-  --version 12.6.1
+# Install RabbitMQ using Helm if not already installed
+if ! helm_release_exists "rabbitmq" "qualifyd-dev"; then
+    echo "Installing RabbitMQ using Helm..."
+    helm upgrade --install \
+      rabbitmq bitnami/rabbitmq \
+      --namespace qualifyd-dev \
+      --values k8s/local/values/rabbitmq-values.yaml \
+      --version 12.6.1
+else
+    echo "RabbitMQ is already installed"
+fi
 
 # Wait for ingress-nginx to be ready
 echo "Waiting for ingress-nginx to be ready..."
