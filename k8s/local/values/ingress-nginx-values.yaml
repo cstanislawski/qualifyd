@@ -30,6 +30,16 @@ controller:
     compute-full-forwarded-for: "true"
     proxy-buffer-size: "16k"
     proxy-body-size: "50m"
+    ssl-redirect: "true"
+    force-ssl-redirect: "true"
+    hsts: "true"
+    hsts-include-subdomains: "true"
+    hsts-max-age: "31536000"
 
   extraArgs:
-    default-ssl-certificate: "ingress-nginx/default-certificate"
+    default-ssl-certificate: "ingress-nginx/qualifyd-tls"
+
+  admissionWebhooks:
+    enabled: true
+    failurePolicy: Fail
+    timeoutSeconds: 10

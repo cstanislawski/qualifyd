@@ -31,21 +31,13 @@ echo "Creating ingress-nginx namespace..."
 kubectl create namespace ingress-nginx --dry-run=client -o yaml | kubectl apply -f -
 
 # Check if TLS secret exists
-if ! kubectl get secret -n ingress-nginx default-certificate &> /dev/null; then
-    echo "Creating self-signed certificate..."
-    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
-      -keyout /tmp/tls.key -out /tmp/tls.crt \
-      -subj "/CN=*.localhost/O=qualifyd"
-
-    echo "Creating TLS secret..."
-    kubectl create secret tls default-certificate \
-      --key /tmp/tls.key \
-      --cert /tmp/tls.crt \
+if ! kubectl get secret -n ingress-nginx qualifyd-tls &> /dev/null; then
+    echo "Creating TLS secret from existing certificates..."
+    kubectl create secret tls qualifyd-tls \
+      --key /Users/cms/certs/qualifyd/qualifyd.test.key \
+      --cert /Users/cms/certs/qualifyd/qualifyd.test.crt \
       -n ingress-nginx \
       --dry-run=client -o yaml | kubectl apply -f -
-
-    # Cleanup temporary certificate files
-    rm /tmp/tls.key /tmp/tls.crt
 else
     echo "TLS secret already exists"
 fi
@@ -57,7 +49,8 @@ if ! helm_release_exists "ingress-nginx" "ingress-nginx"; then
       ingress-nginx ingress-nginx/ingress-nginx \
       --namespace ingress-nginx \
       --values k8s/local/values/ingress-nginx-values.yaml \
-      --version 4.9.1
+      --version 4.9.1 \
+      --set controller.extraArgs.default-ssl-certificate=ingress-nginx/qualifyd-tls
 else
     echo "ingress-nginx is already installed"
 fi
