@@ -1,0 +1,52 @@
+auth:
+  username: "qualifyd"
+  password: "qualifyd"
+
+clustering:
+  enabled: false # Single node for development
+
+persistence:
+  enabled: true
+  size: 1Gi
+
+resources:
+  limits:
+    memory: 512Mi
+    cpu: 500m
+  requests:
+    memory: 256Mi
+    cpu: 250m
+
+metrics:
+  enabled: true
+  plugins: ["rabbitmq_prometheus"]
+  serviceMonitor:
+    enabled: false # We'll enable this when we add Prometheus
+  prometheusRule:
+    enabled: false
+
+service:
+  type: ClusterIP
+  ports:
+    amqp: 5672
+    management: 15672
+
+podSecurityContext:
+  enabled: true
+  fsGroup: 1001
+  runAsUser: 1001
+
+containerSecurityContext:
+  enabled: true
+  runAsUser: 1001
+  runAsNonRoot: true
+
+networkPolicy:
+  enabled: true
+  allowExternal: false
+
+plugins: "rabbitmq_management rabbitmq_prometheus rabbitmq_shovel rabbitmq_shovel_management"
+
+communityPlugins: ""
+
+extraPlugins: ""

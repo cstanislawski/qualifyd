@@ -28,13 +28,16 @@ func main() {
 	// Middleware
 	r.Use(logger.HTTPMiddleware)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.AllowContentType("application/json"))
+	r.Use(middleware.AllowContentType("application/json", "text/plain"))
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
 
 	// Enable CORS for the frontend
 	r.Use(middleware.SetHeader("Access-Control-Allow-Origin", "*"))
 	r.Use(middleware.SetHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS"))
 	r.Use(middleware.SetHeader("Access-Control-Allow-Headers", "Content-Type, Authorization"))
+
+	// Health check endpoint
+	r.Get("/health", healthCheckHandler)
 
 	// API routes
 	r.Route("/api", func(r chi.Router) {
@@ -70,6 +73,13 @@ func main() {
 	if err := http.ListenAndServe(":"+port, r); err != nil {
 		logger.Fatal("Failed to start server", err, map[string]interface{}{"port": port})
 	}
+}
+
+// Health check handler
+func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("OK"))
 }
 
 // API Handlers

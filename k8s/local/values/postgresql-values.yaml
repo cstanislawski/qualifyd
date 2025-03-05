@@ -1,0 +1,40 @@
+auth:
+  enablePostgresUser: true
+  postgresPassword: "postgres"
+  username: "qualifyd"
+  password: "qualifyd"
+  database: "qualifyd"
+
+primary:
+  persistence:
+    size: 1Gi
+
+  resources:
+    limits:
+      memory: 512Mi
+      cpu: 500m
+    requests:
+      memory: 256Mi
+      cpu: 250m
+
+  podSecurityContext:
+    enabled: true
+    fsGroup: 1001
+
+  containerSecurityContext:
+    enabled: true
+    runAsUser: 1001
+    runAsNonRoot: true
+
+service:
+  type: ClusterIP
+  port: 5432
+
+networkPolicy:
+  enabled: true
+  allowExternal: false
+
+metrics:
+  enabled: true
+  serviceMonitor:
+    enabled: false # We'll enable this when we add Prometheus

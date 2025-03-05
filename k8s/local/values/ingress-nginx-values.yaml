@@ -1,0 +1,35 @@
+controller:
+  service:
+    type: LoadBalancer
+
+  ingressClassResource:
+    default: true
+
+  watchIngressWithoutClass: true
+
+  metrics:
+    enabled: true
+    serviceMonitor:
+      enabled: false # We'll enable this when we add Prometheus
+
+  podAnnotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "10254"
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 200m
+      memory: 256Mi
+
+  config:
+    enable-real-ip: "true"
+    use-forwarded-headers: "true"
+    compute-full-forwarded-for: "true"
+    proxy-buffer-size: "16k"
+    proxy-body-size: "50m"
+
+  extraArgs:
+    default-ssl-certificate: "ingress-nginx/default-certificate"
