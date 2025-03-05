@@ -187,4 +187,6 @@ Project Structure
 
 You can add more files to the project structure if needed.
 
+Avoid adding additional dependencies unless absolutely necessary (e.g.: gin, pgx, etc.)
+
 Follow these conventions for a maintainable, performant, and secure Go backend.
