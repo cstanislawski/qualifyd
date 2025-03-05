@@ -75,5 +75,4 @@ echo "  Backend:  kubectl logs -f -n qualifyd-dev -l app=backend"
 echo "  Frontend: kubectl logs -f -n qualifyd-dev -l app=frontend"
 echo
 echo "To rebuild and redeploy:"
-echo "  Backend:  ./scripts/build-backend.sh && kubectl rollout restart -n qualifyd-dev deployment/backend"
-echo "  Frontend: ./scripts/build-frontend.sh && kubectl rollout restart -n qualifyd-dev deployment/frontend"
+echo "  ./scripts/redeploy.sh"
