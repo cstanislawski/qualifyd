@@ -1,9 +1,10 @@
-package logger
+package middleware
 
 import (
 	"net/http"
 	"time"
 
+	"github.com/cstanislawski/qualifyd/pkg/logger"
 	"github.com/go-chi/chi/v5/middleware"
 )
 
@@ -35,11 +36,11 @@ func HTTPMiddleware(next http.Handler) http.Handler {
 		statusCode := ww.Status()
 		msg := http.StatusText(statusCode)
 		if statusCode >= 500 {
-			Error(msg, nil, fields)
+			logger.Error(msg, nil, fields)
 		} else if statusCode >= 400 {
-			Warn(msg, fields)
+			logger.Warn(msg, fields)
 		} else {
-			Info(msg, fields)
+			logger.Info(msg, fields)
 		}
 	})
 }

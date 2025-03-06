@@ -7,6 +7,7 @@ import (
 
 	"github.com/cstanislawski/qualifyd/internal/ws"
 	"github.com/cstanislawski/qualifyd/pkg/logger"
+	localmiddleware "github.com/cstanislawski/qualifyd/pkg/middleware"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog"
@@ -26,7 +27,7 @@ func main() {
 	r := chi.NewRouter()
 
 	// Middleware
-	r.Use(logger.HTTPMiddleware)
+	r.Use(localmiddleware.HTTPMiddleware)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.AllowContentType("application/json", "text/plain"))
 	r.Use(middleware.SetHeader("Content-Type", "application/json"))
