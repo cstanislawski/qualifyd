@@ -45,7 +45,6 @@ if [[ $deploy_backend == false && $deploy_frontend == false ]]; then
     deploy_frontend=true
 fi
 
-# Function to rebuild and redeploy backend
 redeploy_backend() {
     echo "Rebuilding and redeploying backend..."
     ./scripts/build-backend.sh
@@ -58,7 +57,6 @@ redeploy_backend() {
     echo "Backend redeployed successfully!"
 }
 
-# Function to rebuild and redeploy frontend
 redeploy_frontend() {
     echo "Rebuilding and redeploying frontend..."
     ./scripts/build-frontend.sh
