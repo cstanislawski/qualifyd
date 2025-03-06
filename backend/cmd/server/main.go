@@ -1,13 +1,20 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"os"
 
 	"github.com/cstanislawski/qualifyd/internal/ws"
+	"github.com/cstanislawski/qualifyd/pkg/auth"
+	"github.com/cstanislawski/qualifyd/pkg/config"
+	"github.com/cstanislawski/qualifyd/pkg/database"
+	"github.com/cstanislawski/qualifyd/pkg/handler"
 	"github.com/cstanislawski/qualifyd/pkg/logger"
 	localmiddleware "github.com/cstanislawski/qualifyd/pkg/middleware"
+	"github.com/cstanislawski/qualifyd/pkg/model"
+	"github.com/cstanislawski/qualifyd/pkg/repository"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/rs/zerolog"
@@ -19,6 +26,39 @@ func main() {
 		logger.WithLevel(zerolog.InfoLevel),
 		logger.WithCaller(true),
 	)
+	log := &logger.DefaultLogger{} // Create a new default logger
+
+	// Load configuration
+	cfg := config.Load()
+
+	// Initialize database
+	db, err := database.New(context.Background(), &cfg.Database)
+	if err != nil {
+		log.Fatal("Failed to connect to database", err, nil)
+	}
+	defer db.Close()
+
+	// Get migrations directory
+	migrationsDir := os.Getenv("MIGRATIONS_DIR")
+	if migrationsDir == "" {
+		migrationsDir = "./migrations" // Default migrations directory
+	}
+
+	// Run migrations
+	migrationService := database.NewMigrationService(db, migrationsDir, log)
+	if err := migrationService.MigrateUp(context.Background()); err != nil {
+		log.Fatal("Failed to run migrations", err, nil)
+	}
+
+	// Initialize repositories
+	userRepo := repository.NewUserRepository(db)
+	orgRepo := repository.NewOrganizationRepository(db)
+
+	// Initialize authentication service
+	authService := auth.New(&cfg.JWT)
+
+	// Initialize handlers
+	authHandler := handler.NewAuthHandler(userRepo, orgRepo, authService, log)
 
 	// Initialize websocket hub
 	terminalHub := ws.NewTerminalHub()
@@ -42,21 +82,41 @@ func main() {
 
 	// API routes
 	r.Route("/api", func(r chi.Router) {
-		// Admin API routes
-		r.Route("/admin", func(r chi.Router) {
-			r.Get("/templates", getTemplatesHandler)
-			r.Post("/templates", createTemplateHandler)
-			r.Get("/evaluations", getEvaluationsHandler)
-		})
-
-		// Candidate API routes
-		r.Route("/candidate", func(r chi.Router) {
-			r.Get("/assessments", getAssessmentsHandler)
-		})
-
 		// Authentication API routes
-		r.Post("/login", apiLoginHandler)
-		r.Post("/register", apiRegisterHandler)
+		r.Post("/login", authHandler.Login)
+		r.Post("/register", authHandler.Register)
+		r.Post("/refresh-token", authHandler.RefreshToken)
+
+		// Protected routes
+		r.Group(func(r chi.Router) {
+			r.Use(localmiddleware.AuthMiddleware(authService))
+
+			// Admin API routes
+			r.Route("/admin", func(r chi.Router) {
+				r.Use(localmiddleware.RequireRole(model.RoleAdmin))
+				r.Get("/templates", getTemplatesHandler)
+				r.Post("/templates", createTemplateHandler)
+				r.Get("/evaluations", getEvaluationsHandler)
+			})
+
+			// Recruiter API routes
+			r.Route("/recruiter", func(r chi.Router) {
+				r.Use(localmiddleware.RequireRole(model.RoleRecruiter, model.RoleAdmin))
+				// TODO: Add recruiter-specific endpoints
+			})
+
+			// Candidate API routes
+			r.Route("/candidate", func(r chi.Router) {
+				r.Use(localmiddleware.RequireRole(model.RoleCandidate))
+				r.Get("/assessments", getAssessmentsHandler)
+			})
+
+			// Reviewer API routes
+			r.Route("/reviewer", func(r chi.Router) {
+				r.Use(localmiddleware.RequireRole(model.RoleReviewer, model.RoleAdmin))
+				// TODO: Add reviewer-specific endpoints
+			})
+		})
 	})
 
 	// WebSocket routes
@@ -72,7 +132,7 @@ func main() {
 
 	fmt.Printf("API Server starting on port %s...\n", port)
 	if err := http.ListenAndServe(":"+port, r); err != nil {
-		logger.Fatal("Failed to start server", err, map[string]interface{}{"port": port})
+		log.Fatal("Failed to start server", err, map[string]interface{}{"port": port})
 	}
 }
 
@@ -83,7 +143,7 @@ func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("OK"))
 }
 
-// API Handlers
+// API Handlers - Placeholders until we implement proper handlers
 
 func getTemplatesHandler(w http.ResponseWriter, r *http.Request) {
 	// Placeholder for API response
@@ -103,14 +163,4 @@ func getEvaluationsHandler(w http.ResponseWriter, r *http.Request) {
 func getAssessmentsHandler(w http.ResponseWriter, r *http.Request) {
 	// Placeholder for API response
 	w.Write([]byte(`{"assessments": []}`))
-}
-
-func apiLoginHandler(w http.ResponseWriter, r *http.Request) {
-	// Placeholder for API response
-	w.Write([]byte(`{"status": "success", "token": "sample-token"}`))
-}
-
-func apiRegisterHandler(w http.ResponseWriter, r *http.Request) {
-	// Placeholder for API response
-	w.Write([]byte(`{"status": "success", "message": "User registered"}`))
 }
