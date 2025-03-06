@@ -8,9 +8,25 @@ import (
 	"github.com/rs/zerolog"
 )
 
+// Logger is an interface that defines logging methods
+type Logger interface {
+	Debug(msg string, fields ...map[string]interface{})
+	Info(msg string, fields ...map[string]interface{})
+	Warn(msg string, fields ...map[string]interface{})
+	Error(msg string, err error, fields ...map[string]interface{})
+	Fatal(msg string, err error, fields ...map[string]interface{})
+}
+
+// DefaultLogger implements the Logger interface using zerolog
+type DefaultLogger struct {
+	log zerolog.Logger
+}
+
 var (
 	// Log is the global logger instance
 	Log zerolog.Logger
+	// GlobalLogger is the default logger implementation
+	GlobalLogger *DefaultLogger
 )
 
 // Init initializes the logger with the specified configuration
@@ -44,6 +60,14 @@ func Init(opts ...Option) {
 
 	// Create final logger
 	Log = logContext.Logger().Level(config.level)
+
+	// Initialize the global logger implementation
+	GlobalLogger = &DefaultLogger{log: Log}
+}
+
+// NewLogger creates a new logger instance
+func NewLogger(log zerolog.Logger) *DefaultLogger {
+	return &DefaultLogger{log: log}
 }
 
 // Config holds the logger configuration
@@ -125,6 +149,49 @@ func Error(msg string, err error, fields ...map[string]interface{}) {
 // Fatal logs a fatal message and exits
 func Fatal(msg string, err error, fields ...map[string]interface{}) {
 	event := Log.Fatal()
+	if err != nil {
+		event = event.Err(err)
+	}
+	addFields(event, fields)
+	event.Msg(msg)
+}
+
+// DefaultLogger implementation methods
+
+// Debug logs a debug message
+func (l *DefaultLogger) Debug(msg string, fields ...map[string]interface{}) {
+	event := l.log.Debug()
+	addFields(event, fields)
+	event.Msg(msg)
+}
+
+// Info logs an info message
+func (l *DefaultLogger) Info(msg string, fields ...map[string]interface{}) {
+	event := l.log.Info()
+	addFields(event, fields)
+	event.Msg(msg)
+}
+
+// Warn logs a warning message
+func (l *DefaultLogger) Warn(msg string, fields ...map[string]interface{}) {
+	event := l.log.Warn()
+	addFields(event, fields)
+	event.Msg(msg)
+}
+
+// Error logs an error message
+func (l *DefaultLogger) Error(msg string, err error, fields ...map[string]interface{}) {
+	event := l.log.Error()
+	if err != nil {
+		event = event.Err(err)
+	}
+	addFields(event, fields)
+	event.Msg(msg)
+}
+
+// Fatal logs a fatal message and exits
+func (l *DefaultLogger) Fatal(msg string, err error, fields ...map[string]interface{}) {
+	event := l.log.Fatal()
 	if err != nil {
 		event = event.Err(err)
 	}

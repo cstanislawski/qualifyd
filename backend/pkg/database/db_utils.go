@@ -108,3 +108,71 @@ func ScanRowsIntoSlice[T any](ctx context.Context, rows pgx.Rows, scanFn func(ro
 
 	return result, nil
 }
+
+// PaginationParams represents common pagination parameters
+type PaginationParams struct {
+	Page     int
+	PageSize int
+}
+
+// NewPaginationParams creates a new pagination params with defaults
+func NewPaginationParams(page, pageSize int) PaginationParams {
+	// Default values
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 10
+	}
+	if pageSize > 100 {
+		pageSize = 100 // Max page size
+	}
+
+	return PaginationParams{
+		Page:     page,
+		PageSize: pageSize,
+	}
+}
+
+// Offset calculates the offset for SQL queries
+func (p PaginationParams) Offset() int {
+	return (p.Page - 1) * p.PageSize
+}
+
+// Limit returns the limit for SQL queries
+func (p PaginationParams) Limit() int {
+	return p.PageSize
+}
+
+// PaginatedResponse represents a paginated response with metadata
+type PaginatedResponse struct {
+	Data       interface{} `json:"data"`
+	Pagination struct {
+		CurrentPage int  `json:"current_page"`
+		PageSize    int  `json:"page_size"`
+		TotalItems  int  `json:"total_items"`
+		TotalPages  int  `json:"total_pages"`
+		HasNextPage bool `json:"has_next_page"`
+		HasPrevPage bool `json:"has_prev_page"`
+	} `json:"pagination"`
+}
+
+// NewPaginatedResponse creates a new paginated response
+func NewPaginatedResponse(data interface{}, params PaginationParams, totalItems int) PaginatedResponse {
+	totalPages := (totalItems + params.PageSize - 1) / params.PageSize
+	if totalPages < 1 {
+		totalPages = 1
+	}
+
+	response := PaginatedResponse{
+		Data: data,
+	}
+	response.Pagination.CurrentPage = params.Page
+	response.Pagination.PageSize = params.PageSize
+	response.Pagination.TotalItems = totalItems
+	response.Pagination.TotalPages = totalPages
+	response.Pagination.HasNextPage = params.Page < totalPages
+	response.Pagination.HasPrevPage = params.Page > 1
+
+	return response
+}

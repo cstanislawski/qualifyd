@@ -205,6 +205,26 @@ func (r *OrganizationRepository) List(ctx context.Context, limit, offset int) ([
 	return database.ScanRowsIntoSlice(ctx, rows, r.scanOrganization)
 }
 
+// ListPaginated retrieves a paginated list of organizations
+func (r *OrganizationRepository) ListPaginated(ctx context.Context, params database.PaginationParams) ([]*model.Organization, error) {
+	return r.List(ctx, params.Limit(), params.Offset())
+}
+
+// GetPaginatedOrganizations returns a paginated response of organizations
+func (r *OrganizationRepository) GetPaginatedOrganizations(ctx context.Context, params database.PaginationParams) (database.PaginatedResponse, error) {
+	organizations, err := r.ListPaginated(ctx, params)
+	if err != nil {
+		return database.PaginatedResponse{}, err
+	}
+
+	count, err := r.Count(ctx)
+	if err != nil {
+		return database.PaginatedResponse{}, err
+	}
+
+	return database.NewPaginatedResponse(organizations, params, count), nil
+}
+
 // Count counts the total number of organizations
 func (r *OrganizationRepository) Count(ctx context.Context) (int, error) {
 	query := `SELECT COUNT(*) FROM organizations`

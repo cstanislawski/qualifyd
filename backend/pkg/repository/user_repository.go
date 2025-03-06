@@ -331,3 +331,23 @@ func (r *UserRepository) scanUser(row pgx.Rows) (*model.User, error) {
 
 	return &user, nil
 }
+
+// ListPaginated retrieves a paginated list of users
+func (r *UserRepository) ListPaginated(ctx context.Context, params database.PaginationParams, organizationID *string) ([]*model.User, error) {
+	return r.List(ctx, params.Limit(), params.Offset(), organizationID)
+}
+
+// GetPaginatedUsers returns a paginated response of users
+func (r *UserRepository) GetPaginatedUsers(ctx context.Context, params database.PaginationParams, organizationID *string) (database.PaginatedResponse, error) {
+	users, err := r.ListPaginated(ctx, params, organizationID)
+	if err != nil {
+		return database.PaginatedResponse{}, err
+	}
+
+	count, err := r.Count(ctx, organizationID)
+	if err != nil {
+		return database.PaginatedResponse{}, err
+	}
+
+	return database.NewPaginatedResponse(users, params, count), nil
+}
