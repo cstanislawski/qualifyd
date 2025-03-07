@@ -51,6 +51,15 @@ spec:
               value: "22"
             - name: TERMINAL_IMAGE
               value: "qualifyd-terminal:dev"
+            # Fallback terminal host when K8s fails
+            - name: TERMINAL_HOST
+              value: "terminal.qualifyd-dev.svc.cluster.local"
+            # Debug mode - print more information
+            - name: DEBUG
+              value: "true"
+            # Log level - set to debug for more information
+            - name: LOG_LEVEL
+              value: "debug"
           volumeMounts:
             - name: config
               mountPath: /app/config

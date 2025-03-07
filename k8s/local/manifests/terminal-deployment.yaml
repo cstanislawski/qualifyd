@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: terminal
+  namespace: qualifyd-dev
+  labels:
+    app: terminal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: terminal
+  template:
+    metadata:
+      labels:
+        app: terminal
+    spec:
+      containers:
+        - name: terminal
+          image: qualifyd-terminal:dev
+          imagePullPolicy: Never # Use local image for development
+          ports:
+            - name: ssh
+              containerPort: 22
+              protocol: TCP
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            # Note: We're intentionally not using runAsNonRoot here since the SSH server
+            # in our image requires root to bind to port 22. The actual terminal user
+            # that candidates will use is still a non-root 'candidate' user.
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            privileged: false
+          readinessProbe:
+            exec:
+              command: ["/healthcheck.sh"]
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            successThreshold: 1
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command: ["/healthcheck.sh"]
+            initialDelaySeconds: 15
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 3
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: terminal
+  namespace: qualifyd-dev
+  labels:
+    app: terminal
+spec:
+  type: ClusterIP
+  ports:
+    - port: 22
+      targetPort: ssh
+      protocol: TCP
+      name: ssh
+  selector:
+    app: terminal

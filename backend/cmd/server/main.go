@@ -11,6 +11,7 @@ import (
 	"github.com/cstanislawski/qualifyd/pkg/config"
 	"github.com/cstanislawski/qualifyd/pkg/database"
 	"github.com/cstanislawski/qualifyd/pkg/handler"
+	"github.com/cstanislawski/qualifyd/pkg/k8s"
 	"github.com/cstanislawski/qualifyd/pkg/logger"
 	localmiddleware "github.com/cstanislawski/qualifyd/pkg/middleware"
 	"github.com/cstanislawski/qualifyd/pkg/model"
@@ -50,6 +51,20 @@ func main() {
 		log.Fatal("Failed to run migrations", err, nil)
 	}
 
+	// Initialize Kubernetes client
+	var k8sClient *k8s.Client
+	k8sClient, err = k8s.NewClient(
+		context.Background(),
+		k8s.WithLogger(log),
+	)
+	if err != nil {
+		// Log error but don't exit - continue without K8s capabilities
+		fmt.Printf("WARNING: Kubernetes client initialization failed: %v\n", err)
+		log.Error("Failed to create Kubernetes client, continuing without Kubernetes capabilities", err, nil)
+	} else {
+		fmt.Println("Successfully initialized Kubernetes client")
+	}
+
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
 	orgRepo := repository.NewOrganizationRepository(db)
@@ -62,6 +77,7 @@ func main() {
 
 	// Initialize websocket hub
 	terminalHub := ws.NewTerminalHub()
+	terminalHub.K8sClient = k8sClient // Pass the K8s client to the hub
 	go terminalHub.Run()
 
 	r := chi.NewRouter()

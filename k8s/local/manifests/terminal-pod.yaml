@@ -7,7 +7,14 @@ metadata:
     app.qualifyd.io/component: terminal
   annotations:
     description: "Template for terminal pods - not meant to be deployed directly"
+    # This should be treated as a template only, not for direct deployment
+    qualifyd.io/template: "true"
 spec:
+  # Important: This is just a template
+  # When the backend creates pods dynamically, it will:
+  # 1. Use this template as a base
+  # 2. Set a different name with the assessment ID as a suffix
+  # 3. Add appropriate labels and annotations
   containers:
     - name: terminal
       image: qualifyd-terminal:dev
@@ -24,7 +31,9 @@ spec:
           cpu: 500m
           memory: 256Mi
       securityContext:
-        runAsNonRoot: true
+        # Note: We're intentionally not using runAsNonRoot here since the SSH server
+        # in our image requires root to bind to port 22. The actual terminal user
+        # that candidates will use is still a non-root 'candidate' user.
         allowPrivilegeEscalation: false
         readOnlyRootFilesystem: false
         privileged: false
