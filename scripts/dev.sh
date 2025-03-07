@@ -65,10 +65,7 @@ kubectl wait --namespace qualifyd-dev \
   --timeout=120s
 
 # Set namespace
-if ! kubectl config get-contexts | grep -q "qualifyd-dev"; then
-  echo "Setting namespace to qualifyd-dev"
-  kubectl config set-context --current --namespace=qualifyd-dev
-fi
+kubectl config set-context --current --namespace=qualifyd-dev
 
 echo
 echo "Development environment is ready!"

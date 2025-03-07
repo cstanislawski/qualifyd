@@ -40,7 +40,7 @@ func main() {
 	logger.Init(
 		logger.WithLevel(level),
 	)
-	log := &logger.DefaultLogger{} // Create a new default logger
+	log := logger.GlobalLogger // Use the global logger instance instead of creating a new one
 
 	// Load configuration
 	cfg := config.Load()
