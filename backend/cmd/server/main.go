@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 
@@ -23,8 +22,23 @@ import (
 
 func main() {
 	// Initialize logger
+	logLevel := os.Getenv("LOG_LEVEL")
+	level := zerolog.InfoLevel // Default to info level
+	if logLevel != "" {
+		switch logLevel {
+		case "debug":
+			level = zerolog.DebugLevel
+		case "info":
+			level = zerolog.InfoLevel
+		case "warn":
+			level = zerolog.WarnLevel
+		case "error":
+			level = zerolog.ErrorLevel
+		}
+	}
+
 	logger.Init(
-		logger.WithLevel(zerolog.InfoLevel),
+		logger.WithLevel(level),
 		logger.WithCaller(true),
 	)
 	log := &logger.DefaultLogger{} // Create a new default logger
@@ -53,16 +67,24 @@ func main() {
 
 	// Initialize Kubernetes client
 	var k8sClient *k8s.Client
-	k8sClient, err = k8s.NewClient(
-		context.Background(),
-		k8s.WithLogger(log),
-	)
+	namespace := os.Getenv("K8S_NAMESPACE")
+	if namespace == "" {
+		namespace = "default"
+	}
+	log.Debug("Attempting to create Kubernetes client", map[string]interface{}{
+		"namespace": namespace,
+	})
+	k8sClient, err = k8s.NewClient(log, namespace)
 	if err != nil {
 		// Log error but don't exit - continue without K8s capabilities
-		fmt.Printf("WARNING: Kubernetes client initialization failed: %v\n", err)
-		log.Error("Failed to create Kubernetes client, continuing without Kubernetes capabilities", err, nil)
+		log.Error("Failed to create Kubernetes client, continuing without Kubernetes capabilities", err, map[string]interface{}{
+			"namespace": namespace,
+			"error":     err.Error(),
+		})
 	} else {
-		fmt.Println("Successfully initialized Kubernetes client")
+		log.Info("Kubernetes client initialized successfully", map[string]interface{}{
+			"namespace": namespace,
+		})
 	}
 
 	// Initialize repositories
@@ -146,7 +168,9 @@ func main() {
 		port = "8080"
 	}
 
-	fmt.Printf("API Server starting on port %s...\n", port)
+	log.Info("API Server starting", map[string]interface{}{
+		"port": port,
+	})
 	if err := http.ListenAndServe(":"+port, r); err != nil {
 		log.Fatal("Failed to start server", err, map[string]interface{}{"port": port})
 	}
