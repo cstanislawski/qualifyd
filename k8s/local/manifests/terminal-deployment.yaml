@@ -23,6 +23,11 @@ spec:
             - name: ssh
               containerPort: 22
               protocol: TCP
+          env:
+            - name: TERMINAL_USER
+              value: "candidate"
+            - name: TERMINAL_PASSWORD
+              value: "password"
           resources:
             requests:
               cpu: 100m
@@ -31,9 +36,7 @@ spec:
               cpu: 500m
               memory: 256Mi
           securityContext:
-            # Note: We're intentionally not using runAsNonRoot here since the SSH server
-            # in our image requires root to bind to port 22. The actual terminal user
-            # that candidates will use is still a non-root 'candidate' user.
+            # We need to run as root for sshd to bind to port 22
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
             privileged: false

@@ -28,11 +28,13 @@ RUN apk add --no-cache ca-certificates tzdata bash
 # Set working directory
 WORKDIR /app
 
-# Copy the binary from builder
-COPY --from=builder /app .
+# Copy the binary and migrations from builder
+COPY --from=builder /app/server .
+COPY --from=builder /app/migrations ./migrations
 
 # Set environment variables
 ENV PORT=8080
+ENV MIGRATIONS_DIR=/app/migrations
 
 # Expose the application port
 EXPOSE 8080

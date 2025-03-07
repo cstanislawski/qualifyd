@@ -337,6 +337,17 @@ func (t *Terminal) provisionPod(ctx context.Context) error {
 // connectSSH establishes an SSH connection to the terminal pod or container
 func (t *Terminal) connectSSH() error {
 	var host string
+	var err error
+
+	// Get SSH connection details from environment variables with validation
+	port := getEnv("TERMINAL_PORT", "22")
+	user := getEnv("TERMINAL_USER", "candidate")
+	password := getEnv("TERMINAL_PASSWORD", "password")
+
+	// Validate SSH parameters
+	if user == "" || password == "" {
+		return fmt.Errorf("invalid SSH credentials: user or password is empty")
+	}
 
 	// If t.terminalHost is set, use it directly (fallback mode)
 	if t.terminalHost != "" {
@@ -346,78 +357,10 @@ func (t *Terminal) connectSSH() error {
 			"host":         host,
 		})
 	} else {
-		// Otherwise, try to get the pod IP from Kubernetes
-		// Create Kubernetes client
-		var k8sClient *k8s.Client
-		var err error
-
-		// Use hub's client if available
-		if t.hub != nil && t.hub.K8sClient != nil {
-			k8sClient = t.hub.K8sClient
-		} else {
-			// Create a new client if needed
-			k8sClient, err = k8s.NewClient(context.Background())
-			if err != nil {
-				// Try fallback to TERMINAL_HOST if K8s client creation fails
-				if host := getEnv("TERMINAL_HOST", ""); host != "" {
-					t.terminalHost = host
-					logger.Info("Kubernetes client creation failed, falling back to TERMINAL_HOST", map[string]interface{}{
-						"assessmentID": t.assessmentID,
-						"host":         host,
-					})
-					host = t.terminalHost
-				} else {
-					return fmt.Errorf("failed to create Kubernetes client and no TERMINAL_HOST provided: %w", err)
-				}
-			}
-		}
-
-		// If we have a Kubernetes client and no fallback host is set, get the pod IP
-		if k8sClient != nil && t.terminalHost == "" {
-			// Get terminal pod with retries
-			var pod *corev1.Pod
-			var retries int = 5
-			var retryDelay time.Duration = 2 * time.Second
-			var podErr error
-
-			for i := 0; i < retries; i++ {
-				pod, podErr = k8sClient.GetTerminalPod(context.Background(), t.assessmentID)
-				if podErr == nil {
-					break
-				}
-
-				logger.Error(fmt.Sprintf("Attempt %d/%d: Failed to get terminal pod", i+1, retries),
-					podErr, map[string]interface{}{
-						"assessmentID": t.assessmentID,
-					})
-
-				// If this isn't the last attempt, wait before retrying
-				if i < retries-1 {
-					logger.Info(fmt.Sprintf("Retrying in %v...", retryDelay), nil)
-					time.Sleep(retryDelay)
-					retryDelay *= 2
-				} else {
-					// Try fallback to TERMINAL_HOST if pod retrieval fails
-					if hostEnv := getEnv("TERMINAL_HOST", ""); hostEnv != "" {
-						t.terminalHost = hostEnv
-						logger.Info("Pod retrieval failed, falling back to TERMINAL_HOST", map[string]interface{}{
-							"assessmentID": t.assessmentID,
-							"host":         hostEnv,
-						})
-						host = t.terminalHost
-					} else {
-						return fmt.Errorf("failed to get terminal pod after %d attempts: %w", retries, podErr)
-					}
-				}
-			}
-
-			// Use the pod IP as the SSH host if we got a pod
-			if pod != nil {
-				host = pod.Status.PodIP
-				if host == "" {
-					return fmt.Errorf("terminal pod has no IP address")
-				}
-			}
+		// Get host from Kubernetes pod
+		host, err = t.getTerminalPodIP()
+		if err != nil {
+			return fmt.Errorf("failed to get terminal pod IP: %w", err)
 		}
 	}
 
@@ -428,27 +371,89 @@ func (t *Terminal) connectSSH() error {
 	logger.Info("Connecting to terminal", map[string]interface{}{
 		"assessmentID": t.assessmentID,
 		"host":         host,
+		"user":         user,
+		"port":         port,
 	})
 
-	// Get SSH connection details from environment variables
-	port := getEnv("TERMINAL_PORT", "22")
-	user := getEnv("TERMINAL_USER", "candidate")
-	password := getEnv("TERMINAL_PASSWORD", "password")
-
-	// Configure SSH client
+	// Configure SSH client with better security settings
 	config := &ssh.ClientConfig{
 		User: user,
 		Auth: []ssh.AuthMethod{
 			ssh.Password(password),
 		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         15 * time.Second, // Increased timeout for SSH connection
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: Use proper host key verification in production
+		Timeout:         15 * time.Second,
+		ClientVersion:   "SSH-2.0-QualifydBackend", // Custom client version for better logging
 	}
 
-	// Connect to SSH server with retries
+	// Connect to SSH server with retries and proper cleanup
 	addr := fmt.Sprintf("%s:%s", host, port)
+	sshClient, err := t.connectWithRetries(addr, config)
+	if err != nil {
+		return fmt.Errorf("failed to establish SSH connection: %w", err)
+	}
+	t.sshClient = sshClient
+
+	// Create and configure SSH session
+	if err := t.setupSSHSession(); err != nil {
+		t.closeSSH() // Clean up on failure
+		return fmt.Errorf("failed to set up SSH session: %w", err)
+	}
+
+	logger.Info("SSH connection established successfully", map[string]interface{}{
+		"assessmentID": t.assessmentID,
+		"host":         host,
+	})
+
+	return nil
+}
+
+// getTerminalPodIP gets the IP address of the terminal pod with retries
+func (t *Terminal) getTerminalPodIP() (string, error) {
+	// Create or get Kubernetes client
+	k8sClient, err := t.getK8sClient()
+	if err != nil {
+		// Try fallback to TERMINAL_HOST
+		if host := getEnv("TERMINAL_HOST", ""); host != "" {
+			t.terminalHost = host
+			logger.Info("K8s client failed, using TERMINAL_HOST", map[string]interface{}{
+				"assessmentID": t.assessmentID,
+				"host":         host,
+			})
+			return host, nil
+		}
+		return "", err
+	}
+
+	// Get terminal pod with retries
+	var pod *corev1.Pod
+	retries := 5
+	retryDelay := 2 * time.Second
+
+	for i := 0; i < retries; i++ {
+		pod, err = k8sClient.GetTerminalPod(context.Background(), t.assessmentID)
+		if err == nil && pod.Status.PodIP != "" {
+			return pod.Status.PodIP, nil
+		}
+
+		logger.Error(fmt.Sprintf("Attempt %d/%d: Failed to get terminal pod IP", i+1, retries),
+			err, map[string]interface{}{
+				"assessmentID": t.assessmentID,
+			})
+
+		if i < retries-1 {
+			time.Sleep(retryDelay)
+			retryDelay *= 2
+		}
+	}
+
+	return "", fmt.Errorf("failed to get terminal pod IP after %d attempts", retries)
+}
+
+// connectWithRetries attempts to establish an SSH connection with retries
+func (t *Terminal) connectWithRetries(addr string, config *ssh.ClientConfig) (*ssh.Client, error) {
 	var sshClient *ssh.Client
-	var sshErr error
+	var err error
 	retries := 5
 	retryDelay := 2 * time.Second
 
@@ -458,99 +463,103 @@ func (t *Terminal) connectSSH() error {
 			"address":      addr,
 		})
 
-		sshClient, sshErr = ssh.Dial("tcp", addr, config)
-		if sshErr == nil {
-			break
+		sshClient, err = ssh.Dial("tcp", addr, config)
+		if err == nil {
+			return sshClient, nil
 		}
 
 		logger.Error(fmt.Sprintf("Attempt %d/%d: Failed to dial SSH server", i+1, retries),
-			sshErr, map[string]interface{}{
+			err, map[string]interface{}{
 				"assessmentID": t.assessmentID,
 				"address":      addr,
 			})
 
-		// If this isn't the last attempt, wait before retrying
 		if i < retries-1 {
-			logger.Info(fmt.Sprintf("Retrying SSH connection in %v...", retryDelay), nil)
 			time.Sleep(retryDelay)
 			retryDelay *= 2
-		} else {
-			return fmt.Errorf("failed to dial SSH server after %d attempts: %w", retries, sshErr)
 		}
 	}
 
-	t.sshClient = sshClient
+	return nil, fmt.Errorf("failed to connect after %d attempts: %w", retries, err)
+}
 
-	// Create a new SSH session
-	session, err := sshClient.NewSession()
+// setupSSHSession creates and configures an SSH session
+func (t *Terminal) setupSSHSession() error {
+	session, err := t.sshClient.NewSession()
 	if err != nil {
-		t.sshClient.Close()
 		return fmt.Errorf("failed to create SSH session: %w", err)
 	}
 	t.sshSession = session
 
-	// Set up terminal modes
-	// ECHO: echo input characters (turned on because we're sending raw keystrokes now)
-	// ICRNL: translate CR to NL on input (for proper command execution)
-	// ISIG: enable signals (Ctrl+C, etc.)
-	// ICANON: enable canonical mode (line-by-line input processing)
+	// Configure terminal modes for better compatibility
 	modes := ssh.TerminalModes{
-		ssh.ECHO:          1, // Echo on - we're now passing raw keystrokes directly
-		ssh.IGNCR:         0, // Don't ignore CR on input
-		ssh.ICRNL:         1, // Map CR to NL on input
-		ssh.INLCR:         0, // Don't map NL to CR on input
-		ssh.ICANON:        1, // Enable canonical mode
-		ssh.ISIG:          1, // Enable signals
-		ssh.TTY_OP_ISPEED: 14400,
-		ssh.TTY_OP_OSPEED: 14400,
+		ssh.ECHO:          1,     // Echo on
+		ssh.IGNCR:         0,     // Don't ignore CR
+		ssh.ICRNL:         1,     // Map CR to NL on input
+		ssh.INLCR:         0,     // Don't map NL to CR
+		ssh.ICANON:        1,     // Enable canonical mode
+		ssh.ISIG:          1,     // Enable signals
+		ssh.TTY_OP_ISPEED: 14400, // Input speed
+		ssh.TTY_OP_OSPEED: 14400, // Output speed
 	}
 
-	// Request pseudo-terminal with a larger initial size
+	// Request pseudo-terminal
 	if err := session.RequestPty("xterm", 40, 120, modes); err != nil {
-		session.Close()
-		t.sshClient.Close()
 		return fmt.Errorf("failed to request pty: %w", err)
 	}
 
-	// Set up pipes for stdin, stdout, and stderr
-	stdin, err := session.StdinPipe()
-	if err != nil {
-		session.Close()
-		t.sshClient.Close()
-		return fmt.Errorf("failed to get stdin pipe: %w", err)
-	}
-	t.stdin = stdin
-
-	stdout, err := session.StdoutPipe()
-	if err != nil {
-		session.Close()
-		t.sshClient.Close()
-		return fmt.Errorf("failed to get stdout pipe: %w", err)
-	}
-
-	stderr, err := session.StderrPipe()
-	if err != nil {
-		session.Close()
-		t.sshClient.Close()
-		return fmt.Errorf("failed to get stderr pipe: %w", err)
+	// Set up I/O pipes
+	if err := t.setupPipes(); err != nil {
+		return err
 	}
 
 	// Start shell
 	if err := session.Shell(); err != nil {
-		session.Close()
-		t.sshClient.Close()
 		return fmt.Errorf("failed to start shell: %w", err)
 	}
 
-	// Handle stdout and stderr
+	return nil
+}
+
+// setupPipes sets up stdin, stdout, and stderr pipes for the SSH session
+func (t *Terminal) setupPipes() error {
+	var err error
+
+	// Set up stdin
+	t.stdin, err = t.sshSession.StdinPipe()
+	if err != nil {
+		return fmt.Errorf("failed to get stdin pipe: %w", err)
+	}
+
+	// Set up stdout
+	stdout, err := t.sshSession.StdoutPipe()
+	if err != nil {
+		return fmt.Errorf("failed to get stdout pipe: %w", err)
+	}
 	go t.handleOutput(stdout)
+
+	// Set up stderr
+	stderr, err := t.sshSession.StderrPipe()
+	if err != nil {
+		return fmt.Errorf("failed to get stderr pipe: %w", err)
+	}
 	go t.handleOutput(stderr)
 
-	logger.Info("SSH connection established successfully", map[string]interface{}{
-		"assessmentID": t.assessmentID,
-	})
-
 	return nil
+}
+
+// getK8sClient gets or creates a Kubernetes client
+func (t *Terminal) getK8sClient() (*k8s.Client, error) {
+	if t.hub != nil && t.hub.K8sClient != nil {
+		return t.hub.K8sClient, nil
+	}
+
+	client, err := k8s.NewClient(context.Background())
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Kubernetes client: %w", err)
+	}
+
+	return client, nil
 }
 
 // readPump pumps messages from the WebSocket connection to the hub.
