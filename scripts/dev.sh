@@ -38,6 +38,10 @@ echo "Building and loading backend image..."
 echo "Building and loading frontend image..."
 ./scripts/build-frontend.sh
 
+# Build and load terminal image
+echo "Building and loading terminal image..."
+./scripts/build-terminal-image.sh
+
 # Apply backend manifests
 echo "Applying backend manifests..."
 kubectl apply -f k8s/local/manifests/backend/
@@ -59,6 +63,12 @@ kubectl wait --namespace qualifyd-dev \
   --for=condition=ready pod \
   --selector=app=frontend \
   --timeout=120s
+
+# Set namespace
+if ! kubectl config get-contexts | grep -q "qualifyd-dev"; then
+  echo "Setting namespace to qualifyd-dev"
+  kubectl config set-context --current --namespace=qualifyd-dev
+fi
 
 echo
 echo "Development environment is ready!"

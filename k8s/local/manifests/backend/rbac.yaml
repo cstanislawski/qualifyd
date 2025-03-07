@@ -1,0 +1,55 @@
+# Service account for the backend to manage terminal pods
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: qualifyd-backend
+  namespace: qualifyd-dev
+---
+# Role to allow the backend to manage terminal pods
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: terminal-manager
+  namespace: qualifyd-dev
+rules:
+  # Pod management
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch", "create", "delete", "patch"]
+  - apiGroups: [""]
+    resources: ["pods/status"]
+    verbs: ["get", "watch"]
+  - apiGroups: [""]
+    resources: ["pods/exec"]
+    verbs: ["create"]
+  # ConfigMap access (for configuration)
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch"]
+  # Secret access (for configuration)
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
+  # Service access (for networking)
+  - apiGroups: [""]
+    resources: ["services"]
+    verbs: ["get", "list", "watch"]
+  # Events (for debugging)
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["get", "list", "watch", "create"]
+---
+# RoleBinding to bind the role to the service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: qualifyd-backend-terminal-manager
+  namespace: qualifyd-dev
+subjects:
+  - kind: ServiceAccount
+    name: qualifyd-backend
+    namespace: qualifyd-dev
+roleRef:
+  kind: Role
+  name: terminal-manager
+  apiGroup: rbac.authorization.k8s.io

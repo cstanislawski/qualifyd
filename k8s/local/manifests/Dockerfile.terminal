@@ -40,6 +40,28 @@ RUN mkdir /var/run/sshd && \
 WORKDIR /home/candidate/assessment
 RUN chown -R candidate:candidate /home/candidate/assessment
 
+# Add a healthcheck script for Kubernetes readiness
+COPY <<EOF /healthcheck.sh
+#!/bin/bash
+# Simple healthcheck that verifies SSH is running
+if ps aux | grep -q "[s]shd"; then
+  exit 0
+else
+  exit 1
+fi
+EOF
+
+RUN chmod +x /healthcheck.sh
+
+# Set user to non-root for security
+USER candidate
+
+# Add a welcome message
+RUN echo "echo 'Welcome to the Qualifyd Assessment Environment'" >> /home/candidate/.bashrc
+
+# Switch back to root to start SSH service
+USER root
+
 # Expose SSH port
 EXPOSE 22
 

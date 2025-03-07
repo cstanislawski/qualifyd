@@ -15,6 +15,7 @@ spec:
       labels:
         app: backend
     spec:
+      serviceAccountName: qualifyd-backend
       containers:
         - name: backend
           image: qualifyd-backend:dev
@@ -38,6 +39,18 @@ spec:
                 secretKeyRef:
                   name: backend-secrets
                   key: JWT_SECRET
+            - name: K8S_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: TERMINAL_USER
+              value: "candidate"
+            - name: TERMINAL_PASSWORD
+              value: "password"
+            - name: TERMINAL_PORT
+              value: "22"
+            - name: TERMINAL_IMAGE
+              value: "qualifyd-terminal:dev"
           volumeMounts:
             - name: config
               mountPath: /app/config
