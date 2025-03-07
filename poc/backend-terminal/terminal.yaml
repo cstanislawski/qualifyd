@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: terminal-poc
+  namespace: qualifyd-dev
+  labels:
+    app: terminal-poc
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: terminal-poc
+  template:
+    metadata:
+      labels:
+        app: terminal-poc
+    spec:
+      containers:
+      - name: terminal
+        image: ubuntu:22.04
+        command: ["sleep", "infinity"]
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "64Mi"
+          limits:
+            cpu: "200m"
+            memory: "128Mi"
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          runAsUser: 1000
+          capabilities:
+            drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: terminal-poc
+  namespace: qualifyd-dev
+spec:
+  selector:
+    app: terminal-poc
+  ports:
+  - port: 22
+    targetPort: 22
+    protocol: TCP
+  type: ClusterIP
