@@ -4,6 +4,7 @@ metadata:
   name: qualifyd-local
 servers: 1
 agents: 2
+image: rancher/k3s:v1.32.2-k3s1
 kubeAPI:
   hostIP: "0.0.0.0"
   hostPort: "6443"
