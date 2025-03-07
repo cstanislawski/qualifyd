@@ -13,6 +13,9 @@ Simple proof of concept that demonstrates:
 
 # Run tests
 ./test.sh
+
+# Clean up when done
+./cleanup.sh
 ```
 
 ## Components
@@ -22,6 +25,7 @@ Simple proof of concept that demonstrates:
 - `main.go`: Simple Go service that lists terminal pods
 - `deploy.sh`: Builds and deploys everything
 - `test.sh`: Verifies the setup works
+- `cleanup.sh`: Removes all POC resources
 
 ## API Endpoints
 
