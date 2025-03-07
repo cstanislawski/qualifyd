@@ -172,12 +172,6 @@ func WithPrettyPrint(enable bool) Option {
 	}
 }
 
-// WithCaller enables including the caller information (file and line)
-func WithCaller(enable bool) Option {
-	return func(c *Config) {
-		c.callerEnable = enable
-	}
-}
 
 // addFields adds custom fields to the log event in a consistent order
 func addFields(event *zerolog.Event, fields []map[string]interface{}) {

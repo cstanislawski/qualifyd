@@ -39,7 +39,6 @@ func main() {
 
 	logger.Init(
 		logger.WithLevel(level),
-		logger.WithCaller(true),
 	)
 	log := &logger.DefaultLogger{} // Create a new default logger
 
