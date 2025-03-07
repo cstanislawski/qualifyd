@@ -7,6 +7,8 @@ controller:
 
   watchIngressWithoutClass: true
 
+  replicaCount: 2
+
   metrics:
     enabled: true
     serviceMonitor:
