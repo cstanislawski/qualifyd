@@ -239,7 +239,11 @@ func (t *Terminal) provisionPod(ctx context.Context) error {
 			"assessmentID": t.assessmentID,
 		})
 
-		k8sClient, err = k8s.NewClient(ctx)
+		namespace := os.Getenv("K8S_NAMESPACE")
+		if namespace == "" {
+			namespace = "default"
+		}
+		k8sClient, err = k8s.NewClient(&logger.DefaultLogger{}, namespace)
 		if err != nil {
 			// If we can't create a K8s client, attempt to use environment variables for a fixed host
 			logger.Error("Failed to create Kubernetes client, attempting fallback to TERMINAL_HOST", err, map[string]interface{}{
@@ -554,7 +558,12 @@ func (t *Terminal) getK8sClient() (*k8s.Client, error) {
 		return t.hub.K8sClient, nil
 	}
 
-	client, err := k8s.NewClient(context.Background())
+	namespace := os.Getenv("K8S_NAMESPACE")
+	if namespace == "" {
+		namespace = "default"
+	}
+
+	client, err := k8s.NewClient(&logger.DefaultLogger{}, namespace)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Kubernetes client: %w", err)
 	}
@@ -816,7 +825,11 @@ func (t *Terminal) closeConnection() {
 		k8sClient = t.hub.K8sClient
 	} else {
 		// Create Kubernetes client
-		k8sClient, err = k8s.NewClient(ctx)
+		namespace := os.Getenv("K8S_NAMESPACE")
+		if namespace == "" {
+			namespace = "default"
+		}
+		k8sClient, err = k8s.NewClient(&logger.DefaultLogger{}, namespace)
 		if err != nil {
 			logger.Error("Failed to create Kubernetes client for deprovision", err, map[string]interface{}{
 				"assessmentID": t.assessmentID,

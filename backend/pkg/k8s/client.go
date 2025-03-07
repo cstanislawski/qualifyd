@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/cstanislawski/qualifyd/pkg/logger"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -39,98 +38,57 @@ func WithLogger(log logger.Logger) ClientOption {
 }
 
 // NewClient creates a new Kubernetes client
-func NewClient(ctx context.Context, opts ...ClientOption) (*Client, error) {
-	// Default configuration
+func NewClient(log logger.Logger, namespace string) (*Client, error) {
 	client := &Client{
-		namespace: getEnvOrDefault("K8S_NAMESPACE", "qualifyd-dev"),
-		log:       &logger.DefaultLogger{},
+		log:       log,
+		namespace: namespace,
 	}
 
-	// Apply options
-	for _, opt := range opts {
-		opt(client)
-	}
+	client.log.Info("Initializing Kubernetes client", map[string]interface{}{"namespace": client.namespace})
 
-	// Print startup message to both log and stdout
-	initMsg := fmt.Sprintf("Initializing Kubernetes client, namespace: %s", client.namespace)
-	client.log.Info(initMsg, nil)
-	fmt.Println(initMsg)
-
-	// Try to load in-cluster config first
-	var config *rest.Config
-	var err error
-
-	config, err = rest.InClusterConfig()
+	client.log.Debug("Attempting to load in-cluster config", nil)
+	config, err := rest.InClusterConfig()
 	if err != nil {
-		errorMsg := fmt.Sprintf("Failed to load in-cluster config: %v", err)
-		client.log.Info(errorMsg, nil)
-		fmt.Println(errorMsg)
-
-		// If in-cluster config fails, try local kubeconfig
-		kubeconfig := getEnvOrDefault("KUBECONFIG", filepath.Join(homeDir(), ".kube", "config"))
-		kubeconfigMsg := fmt.Sprintf("Using kubeconfig file: %s", kubeconfig)
-		client.log.Info(kubeconfigMsg, nil)
-		fmt.Println(kubeconfigMsg)
-
+		client.log.Debug("Failed to load in-cluster config, trying kubeconfig", map[string]interface{}{"error": err.Error()})
+		kubeconfig := os.Getenv("KUBECONFIG")
+		if kubeconfig == "" {
+			kubeconfig = filepath.Join(os.Getenv("HOME"), ".kube", "config")
+		}
+		client.log.Debug("Using kubeconfig path", map[string]interface{}{"path": kubeconfig})
 		config, err = clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
-			errorMsg := fmt.Sprintf("Failed to create kubernetes client using kubeconfig: %v", err)
-			client.log.Error(errorMsg, err, nil)
-			fmt.Println(errorMsg)
-			return nil, fmt.Errorf(errorMsg)
+			client.log.Error("Failed to load kubeconfig", err, map[string]interface{}{"path": kubeconfig})
+			return nil, fmt.Errorf("failed to load kubeconfig: %w", err)
 		}
 	} else {
-		successMsg := "Successfully loaded in-cluster config"
-		client.log.Info(successMsg, nil)
-		fmt.Println(successMsg)
+		client.log.Debug("Successfully loaded in-cluster config", map[string]interface{}{
+			"host":     config.Host,
+			"username": config.Username,
+			"qps":      config.QPS,
+			"burst":    config.Burst,
+		})
 	}
 
-	// Disable rate limiting
-	config.QPS = 100
-	config.Burst = 100
-
-	// Set reasonable timeouts
-	config.Timeout = time.Second * 30
-
-	// Create clientset
+	client.log.Debug("Creating Kubernetes clientset", nil)
 	clientset, err := kubernetes.NewForConfig(config)
 	if err != nil {
-		errorMsg := fmt.Sprintf("Failed to create kubernetes clientset: %v", err)
-		client.log.Error(errorMsg, err, nil)
-		fmt.Println(errorMsg)
-		return nil, fmt.Errorf(errorMsg)
+		client.log.Error("Failed to create kubernetes client", err, nil)
+		return nil, fmt.Errorf("failed to create kubernetes client: %w", err)
 	}
-	client.clientset = clientset
 
-	// Test the connection by listing pods
-	infoMsg := "Testing kubernetes connection by listing pods..."
-	client.log.Info(infoMsg, nil)
-	fmt.Println(infoMsg)
-
-	_, err = clientset.CoreV1().Pods(client.namespace).List(ctx, metav1.ListOptions{Limit: 1})
+	client.log.Debug("Testing kubernetes connection by listing pods", map[string]interface{}{"namespace": client.namespace})
+	_, err = clientset.CoreV1().Pods(client.namespace).List(context.Background(), metav1.ListOptions{})
 	if err != nil {
-		errorMsg := fmt.Sprintf("Kubernetes client connected but failed to list pods (RBAC issue?): %v", err)
-		client.log.Error(errorMsg, err, nil)
-		fmt.Println(errorMsg)
-
-		// Print service account information
-		sa := getEnvOrDefault("KUBERNETES_SERVICE_ACCOUNT", "default")
-		saMsg := fmt.Sprintf("Current service account: %s", sa)
-		client.log.Info(saMsg, nil)
-		fmt.Println(saMsg)
-
-		// Check environment for debugging
-		fmt.Println("Environment variables:")
-		for _, env := range os.Environ() {
-			fmt.Println(env)
-		}
-
-		return nil, fmt.Errorf(errorMsg)
+		sa, _ := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/token")
+		client.log.Error("Failed to list pods (RBAC issue?)", err, map[string]interface{}{
+			"namespace":      client.namespace,
+			"serviceAccount": string(sa),
+		})
+		return nil, fmt.Errorf("failed to list pods: %w", err)
 	}
 
-	successMsg := fmt.Sprintf("Kubernetes client initialized successfully, namespace: %s", client.namespace)
-	client.log.Info(successMsg, nil)
-	fmt.Println(successMsg)
+	client.log.Info("Kubernetes client initialized successfully", map[string]interface{}{"namespace": client.namespace})
+	client.clientset = clientset
 
 	return client, nil
 }
