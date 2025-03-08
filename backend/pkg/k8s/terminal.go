@@ -3,12 +3,15 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/apimachinery/pkg/util/yaml"
 )
 
 const (
@@ -18,6 +21,8 @@ const (
 	TerminalLabelValue = "terminal"
 	// AssessmentIDLabelKey is the label key for identifying the assessment ID
 	AssessmentIDLabelKey = "app.qualifyd.io/assessment-id"
+	// SessionIDLabelKey is the label key for identifying the session ID
+	SessionIDLabelKey = "app.qualifyd.io/session-id"
 	// TerminalPodNamePrefix is the prefix for terminal pod names
 	TerminalPodNamePrefix = "terminal"
 	// DefaultTerminalImage is the default image to use for terminal pods
@@ -30,24 +35,31 @@ const (
 	PodReadyTimeout = 60 * time.Second
 	// PodPollingInterval is the polling interval for checking pod status
 	PodPollingInterval = 2 * time.Second
+	// DefaultTemplateType is the default terminal template type
+	DefaultTemplateType = "default"
+	// PodTTL is the time-to-live for terminal pods after last connection
+	PodTTL = 2 * time.Hour
 )
 
 // TerminalPodConfig contains configuration for creating a terminal pod
 type TerminalPodConfig struct {
 	AssessmentID string
+	SessionID    string
 	Image        string
 	Labels       map[string]string
 	Annotations  map[string]string
 	CPU          string
 	Memory       string
+	TemplateType string // Type of terminal template to use (e.g., "default", "kubernetes")
 }
 
-// GetTerminalPod retrieves a terminal pod by assessment ID
-func (c *Client) GetTerminalPod(ctx context.Context, assessmentID string) (*corev1.Pod, error) {
-	// Define label selector to find the terminal pod for this assessment
-	labelSelector := fmt.Sprintf("%s=%s,%s=%s",
+// GetTerminalPod retrieves a terminal pod by assessment ID and session ID
+func (c *Client) GetTerminalPod(ctx context.Context, assessmentID, sessionID string) (*corev1.Pod, error) {
+	// Define label selector to find the terminal pod for this assessment and session
+	labelSelector := fmt.Sprintf("%s=%s,%s=%s,%s=%s",
 		TerminalLabelKey, TerminalLabelValue,
-		AssessmentIDLabelKey, assessmentID)
+		AssessmentIDLabelKey, assessmentID,
+		SessionIDLabelKey, sessionID)
 
 	pods, err := c.clientset.CoreV1().Pods(c.namespace).List(ctx, metav1.ListOptions{
 		LabelSelector: labelSelector,
@@ -57,11 +69,32 @@ func (c *Client) GetTerminalPod(ctx context.Context, assessmentID string) (*core
 	}
 
 	if len(pods.Items) == 0 {
-		return nil, fmt.Errorf("no terminal pod found for assessment ID %s", assessmentID)
+		return nil, fmt.Errorf("no terminal pod found for assessment ID %s and session ID %s", assessmentID, sessionID)
 	}
 
 	// Return the first matching pod
 	return &pods.Items[0], nil
+}
+
+// loadPodTemplate loads a pod template from the templates directory
+func (c *Client) loadPodTemplate(templateType string) (*corev1.Pod, error) {
+	templatesPath := os.Getenv("TERMINAL_TEMPLATES_PATH")
+	if templatesPath == "" {
+		templatesPath = "/app/templates" // Default path
+	}
+
+	templateFile := filepath.Join(templatesPath, templateType+".yaml")
+	templateData, err := os.ReadFile(templateFile)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read template file %s: %w", templateFile, err)
+	}
+
+	var pod corev1.Pod
+	if err := yaml.Unmarshal(templateData, &pod); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal template: %w", err)
+	}
+
+	return &pod, nil
 }
 
 // CreateTerminalPod creates a new terminal pod
@@ -69,77 +102,93 @@ func (c *Client) CreateTerminalPod(ctx context.Context, config *TerminalPodConfi
 	if config.AssessmentID == "" {
 		return nil, fmt.Errorf("assessment ID is required")
 	}
-
-	// Set default image if not provided
-	if config.Image == "" {
-		config.Image = DefaultTerminalImage
+	if config.SessionID == "" {
+		return nil, fmt.Errorf("session ID is required")
 	}
 
-	// Default resource requests if not specified
-	cpuRequest := "100m"
-	memoryRequest := "128Mi"
-	if config.CPU != "" {
-		cpuRequest = config.CPU
-	}
-	if config.Memory != "" {
-		memoryRequest = config.Memory
+	// Load the appropriate template
+	templateType := config.TemplateType
+	if templateType == "" {
+		templateType = DefaultTemplateType
 	}
 
-	// Create labels map with required labels
-	labels := map[string]string{
-		TerminalLabelKey:     TerminalLabelValue,
-		AssessmentIDLabelKey: config.AssessmentID,
+	template, err := c.loadPodTemplate(templateType)
+	if err != nil {
+		c.log.Error("Failed to load pod template", err, map[string]interface{}{
+			"templateType": templateType,
+		})
+		return nil, fmt.Errorf("failed to load pod template: %w", err)
 	}
+
+	// Create a copy of the template
+	pod := template.DeepCopy()
+
+	// Set the pod name with assessment ID and session ID
+	pod.ObjectMeta.Name = ""
+	pod.ObjectMeta.GenerateName = fmt.Sprintf("%s-%s-%s-", TerminalPodNamePrefix, config.AssessmentID, config.SessionID)
+	pod.ObjectMeta.Namespace = c.namespace
+
+	// Set required labels
+	if pod.ObjectMeta.Labels == nil {
+		pod.ObjectMeta.Labels = make(map[string]string)
+	}
+	pod.ObjectMeta.Labels[TerminalLabelKey] = TerminalLabelValue
+	pod.ObjectMeta.Labels[AssessmentIDLabelKey] = config.AssessmentID
+	pod.ObjectMeta.Labels[SessionIDLabelKey] = config.SessionID
+
+	// Set TTL annotation for cleanup
+	if pod.ObjectMeta.Annotations == nil {
+		pod.ObjectMeta.Annotations = make(map[string]string)
+	}
+	pod.ObjectMeta.Annotations["qualifyd.io/last-activity"] = time.Now().Format(time.RFC3339)
+	pod.ObjectMeta.Annotations["qualifyd.io/ttl"] = PodTTL.String()
 
 	// Merge additional labels if provided
 	for k, v := range config.Labels {
-		labels[k] = v
+		pod.ObjectMeta.Labels[k] = v
 	}
 
-	// Create pod
-	pod := &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: fmt.Sprintf("%s-%s-", TerminalPodNamePrefix, config.AssessmentID),
-			Namespace:    c.namespace,
-			Labels:       labels,
-			Annotations:  config.Annotations,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:            TerminalContainerName,
-					Image:           config.Image,
-					ImagePullPolicy: corev1.PullIfNotPresent, // For local development
-					Ports: []corev1.ContainerPort{
-						{
-							Name:          "ssh",
-							ContainerPort: DefaultSSHPort,
-							Protocol:      corev1.ProtocolTCP,
-						},
-					},
-					Resources: corev1.ResourceRequirements{
-						Requests: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse(cpuRequest),
-							corev1.ResourceMemory: resource.MustParse(memoryRequest),
-						},
-						Limits: corev1.ResourceList{
-							corev1.ResourceCPU:    resource.MustParse(cpuRequest),
-							corev1.ResourceMemory: resource.MustParse(memoryRequest),
-						},
-					},
-					SecurityContext: &corev1.SecurityContext{
-						RunAsNonRoot: &[]bool{true}[0],
-						Privileged:   &[]bool{false}[0],
-					},
-				},
-			},
-			RestartPolicy: corev1.RestartPolicyNever,
-		},
+	// Merge additional annotations if provided
+	for k, v := range config.Annotations {
+		pod.ObjectMeta.Annotations[k] = v
+	}
+
+	// Update container configuration if specified
+	if len(pod.Spec.Containers) > 0 {
+		container := &pod.Spec.Containers[0]
+
+		// Set image if provided
+		if config.Image != "" {
+			container.Image = config.Image
+		}
+
+		// Update resource requests/limits if provided
+		if config.CPU != "" || config.Memory != "" {
+			if container.Resources.Requests == nil {
+				container.Resources.Requests = corev1.ResourceList{}
+			}
+			if container.Resources.Limits == nil {
+				container.Resources.Limits = corev1.ResourceList{}
+			}
+
+			if config.CPU != "" {
+				quantity := resource.MustParse(config.CPU)
+				container.Resources.Requests[corev1.ResourceCPU] = quantity
+				container.Resources.Limits[corev1.ResourceCPU] = quantity
+			}
+			if config.Memory != "" {
+				quantity := resource.MustParse(config.Memory)
+				container.Resources.Requests[corev1.ResourceMemory] = quantity
+				container.Resources.Limits[corev1.ResourceMemory] = quantity
+			}
+		}
 	}
 
 	c.log.Info("Creating terminal pod", map[string]interface{}{
 		"assessmentID": config.AssessmentID,
+		"sessionID":    config.SessionID,
 		"namespace":    c.namespace,
+		"templateType": templateType,
 	})
 
 	// Create the pod
@@ -150,8 +199,10 @@ func (c *Client) CreateTerminalPod(ctx context.Context, config *TerminalPodConfi
 
 	c.log.Info("Terminal pod created", map[string]interface{}{
 		"assessmentID": config.AssessmentID,
+		"sessionID":    config.SessionID,
 		"podName":      created.Name,
 		"namespace":    c.namespace,
+		"templateType": templateType,
 	})
 
 	// Wait for the pod to be ready
@@ -164,10 +215,31 @@ func (c *Client) CreateTerminalPod(ctx context.Context, config *TerminalPodConfi
 	return c.clientset.CoreV1().Pods(c.namespace).Get(ctx, created.Name, metav1.GetOptions{})
 }
 
-// DeleteTerminalPod deletes a terminal pod by assessment ID
-func (c *Client) DeleteTerminalPod(ctx context.Context, assessmentID string) error {
+// UpdatePodActivity updates the last activity timestamp for a pod
+func (c *Client) UpdatePodActivity(ctx context.Context, podName string) error {
+	pod, err := c.clientset.CoreV1().Pods(c.namespace).Get(ctx, podName, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to get pod: %w", err)
+	}
+
+	// Update last activity timestamp
+	if pod.ObjectMeta.Annotations == nil {
+		pod.ObjectMeta.Annotations = make(map[string]string)
+	}
+	pod.ObjectMeta.Annotations["qualifyd.io/last-activity"] = time.Now().Format(time.RFC3339)
+
+	_, err = c.clientset.CoreV1().Pods(c.namespace).Update(ctx, pod, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to update pod: %w", err)
+	}
+
+	return nil
+}
+
+// DeleteTerminalPod deletes a terminal pod by assessment ID and session ID
+func (c *Client) DeleteTerminalPod(ctx context.Context, assessmentID, sessionID string) error {
 	// Get the pod first
-	pod, err := c.GetTerminalPod(ctx, assessmentID)
+	pod, err := c.GetTerminalPod(ctx, assessmentID, sessionID)
 	if err != nil {
 		return err
 	}
@@ -178,6 +250,7 @@ func (c *Client) DeleteTerminalPod(ctx context.Context, assessmentID string) err
 
 	c.log.Info("Deleting terminal pod", map[string]interface{}{
 		"assessmentID": assessmentID,
+		"sessionID":    sessionID,
 		"podName":      pod.Name,
 		"namespace":    c.namespace,
 	})
@@ -193,6 +266,7 @@ func (c *Client) DeleteTerminalPod(ctx context.Context, assessmentID string) err
 
 	c.log.Info("Terminal pod deleted", map[string]interface{}{
 		"assessmentID": assessmentID,
+		"sessionID":    sessionID,
 		"podName":      pod.Name,
 		"namespace":    c.namespace,
 	})
