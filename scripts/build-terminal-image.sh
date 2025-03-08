@@ -10,7 +10,7 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 # Build the terminal image
 echo "Building terminal image..."
-docker build -t qualifyd-terminal:dev -f ${PROJECT_ROOT}/k8s/local/manifests/Dockerfile.terminal ${PROJECT_ROOT}
+docker build -t qualifyd-terminal:dev -f ${PROJECT_ROOT}/k8s/local/manifests/terminal/Dockerfile ${PROJECT_ROOT}
 
 # Load the image into the local Kubernetes cluster
 echo "Loading image into local Kubernetes cluster..."
