@@ -14,6 +14,10 @@ data:
       annotations:
         description: "Default terminal environment"
     spec:
+      securityContext:
+        runAsNonRoot: false
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: terminal
           image: qualifyd-terminal:dev
@@ -30,7 +34,7 @@ data:
               cpu: 500m
               memory: 256Mi
           securityContext:
-            allowPrivilegeEscalation: false
+            allowPrivilegeEscalation: true
             readOnlyRootFilesystem: false
             privileged: false
           readinessProbe:
@@ -60,6 +64,10 @@ data:
       annotations:
         description: "Kubernetes environment with kubectl and helm"
     spec:
+      securityContext:
+        runAsNonRoot: false
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: terminal
           image: qualifyd-terminal:dev
@@ -76,7 +84,7 @@ data:
               cpu: 1000m
               memory: 512Mi
           securityContext:
-            allowPrivilegeEscalation: false
+            allowPrivilegeEscalation: true
             readOnlyRootFilesystem: false
             privileged: false
           volumeMounts:
