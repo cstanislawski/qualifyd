@@ -23,48 +23,63 @@ export default function XTermComponents({
 
   // Define connectWebSocket as a useCallback to avoid dependency issues
   const connectWebSocket = useCallback((term: XTerm) => {
-    // Connect directly to the backend WebSocket server
+    console.log('WebSocket connection attempt starting...');
+
+    // Always use the same domain as the page for WebSocket connections
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsHost = process.env.NEXT_PUBLIC_WS_HOST || window.location.host;
-    const wsUrl = `${protocol}//${wsHost}/ws/terminal/${assessmentId}`;
-    console.log(`Connecting to WebSocket at: ${wsUrl}`);
+    // Connect directly to the backend terminal endpoint using the correct path
+    const wsUrl = `${protocol}//${window.location.host}/ws/terminal/${assessmentId}`;
 
-    const socket = new WebSocket(wsUrl);
-    socketRef.current = socket;
+    console.log('Environment:', process.env.NEXT_PUBLIC_APP_ENV);
+    console.log('Page Protocol:', window.location.protocol);
+    console.log('Using WebSocket protocol:', protocol);
+    console.log('Using WebSocket URL:', wsUrl);
+    console.log('Assessment ID:', assessmentId);
 
-    socket.onopen = () => {
-      console.log('WebSocket connection established');
-      setIsConnected(true);
-      term.writeln('Connected to terminal.');
-      term.writeln('Type commands and press Enter to execute them.');
-      term.writeln('');
+    try {
+      const socket = new WebSocket(wsUrl);
+      console.log('WebSocket instance created');
+      socketRef.current = socket;
 
-      // Test the connection by sending a ping
-      try {
-        socket.send(JSON.stringify({ type: 'ping' }));
-        console.log('Ping sent to server');
-      } catch (e) {
-        console.error('Error sending ping:', e);
-      }
+      socket.onopen = () => {
+        console.log('WebSocket onopen event fired');
+        setIsConnected(true);
+        term.writeln('Connected to terminal.');
+        term.writeln('Type commands and press Enter to execute them.');
+        term.writeln('');
 
-      // Set up the data handler after socket is connected
-      setupTerminalDataHandler(term, socket);
-    };
+        // Test the connection by sending a ping
+        try {
+          socket.send(JSON.stringify({ type: 'ping' }));
+          console.log('Ping sent to server');
+        } catch (e) {
+          console.error('Error sending ping:', e);
+        }
 
-    socket.onmessage = (event) => {
-      term.write(event.data);
-    };
+        // Set up the data handler after socket is connected
+        setupTerminalDataHandler(term, socket);
+      };
 
-    socket.onclose = () => {
-      setIsConnected(false);
-      term.writeln('\r\nDisconnected from terminal.');
-    };
+      socket.onmessage = (event) => {
+        console.log('Received message from server:', event.data);
+        term.write(event.data);
+      };
 
-    socket.onerror = (error) => {
-      setIsConnected(false);
-      term.writeln(`\r\nError connecting to terminal server. Please try again later.`);
-      console.error('WebSocket error:', error);
-    };
+      socket.onclose = (event) => {
+        console.log('WebSocket connection closed:', event.code, event.reason);
+        setIsConnected(false);
+        term.writeln('\r\nDisconnected from terminal.');
+      };
+
+      socket.onerror = (error) => {
+        console.error('WebSocket error occurred:', error);
+        setIsConnected(false);
+        term.writeln(`\r\nError connecting to terminal server. Please try again later.`);
+      };
+    } catch (error) {
+      console.error('Error creating WebSocket instance:', error);
+      term.writeln(`\r\nFailed to create WebSocket connection: ${error.message}`);
+    }
   }, [assessmentId, setIsConnected]);
 
   const setupTerminalDataHandler = (term: XTerm, socket: WebSocket) => {

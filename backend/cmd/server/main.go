@@ -80,10 +80,6 @@ func main() {
 			"namespace": namespace,
 			"error":     err.Error(),
 		})
-	} else {
-		log.Info("Kubernetes client initialized successfully", map[string]interface{}{
-			"namespace": namespace,
-		})
 	}
 
 	// Initialize repositories

@@ -9,7 +9,7 @@ import { GripVertical } from 'lucide-react';
 export default function TerminalPage() {
   // Use the useParams hook to get route parameters client-side
   const params = useParams<{ id: string }>();
-  const id = params.id;
+  const id = params?.id;
   const [leftPanelWidth, setLeftPanelWidth] = useState(30);
   const [isResizing, setIsResizing] = useState(false);
 

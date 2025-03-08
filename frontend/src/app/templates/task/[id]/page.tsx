@@ -64,7 +64,7 @@ const mockVersionHistory = [
 
 export default function TaskTemplateDetailPage() {
   const params = useParams();
-  const id = params.id as string;
+  const id = params?.id as string;
   const [activeTab, setActiveTab] = useState('details');
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [template, setTemplate] = useState(mockTaskTemplate);

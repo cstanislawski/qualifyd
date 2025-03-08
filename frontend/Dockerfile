@@ -20,7 +20,8 @@ COPY . .
 # Define the build argument
 ARG NEXT_PUBLIC_WS_HOST
 # Use the build argument value or a default value if not provided
-ENV NEXT_PUBLIC_WS_HOST=${NEXT_PUBLIC_WS_HOST:-localhost:8080}
+# Removed hardcoded value to let Kubernetes deployment config set it
+ENV NEXT_PUBLIC_WS_HOST=${NEXT_PUBLIC_WS_HOST}
 # Disable Next.js telemetry
 ENV NEXT_TELEMETRY_DISABLED=1
 
@@ -52,7 +53,7 @@ EXPOSE 3000
 
 # Define the run-time environment variable
 # This will be overridden by any environment variables passed at container start time
-ENV NEXT_PUBLIC_WS_HOST=localhost:8080
+# Removed hardcoded value to let Kubernetes deployment config set it
 
 # Command to run the application
 CMD ["node", "server.js"]

@@ -10,6 +10,13 @@ metadata:
     nginx.ingress.kubernetes.io/ssl-passthrough: "false"
     nginx.ingress.kubernetes.io/secure-backends: "false"
     nginx.ingress.kubernetes.io/backend-protocol: "HTTP"
+    # WebSocket support
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "3600"
+    # Enable WebSocket with standard annotations
+    nginx.ingress.kubernetes.io/websocket-services: "backend"
+    nginx.ingress.kubernetes.io/upstream-hash-by: "$binary_remote_addr"
 spec:
   ingressClassName: nginx
   tls:
@@ -20,6 +27,13 @@ spec:
     - host: qualifyd.test
       http:
         paths:
+          - path: /ws/terminal
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8080
           - path: /
             pathType: Prefix
             backend:
