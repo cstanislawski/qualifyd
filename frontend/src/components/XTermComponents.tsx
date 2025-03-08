@@ -20,6 +20,8 @@ export default function XTermComponents({
   const xtermRef = useRef<XTerm | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
+  const loadingAnimationRef = useRef<number | null>(null);
+  const podReadyRef = useRef<boolean>(false);
 
   // Define connectWebSocket as a useCallback to avoid dependency issues
   const connectWebSocket = useCallback((term: XTerm) => {
@@ -36,48 +38,95 @@ export default function XTermComponents({
     console.log('Using WebSocket URL:', wsUrl);
     console.log('Assessment ID:', assessmentId);
 
+    // Start loading animation
+    let dots = 1;
+    const animateLoading = () => {
+      if (!podReadyRef.current) {
+        const dotsString = '.'.repeat(dots);
+        term.write('\r\x1B[2K'); // Clear the current line
+        term.write(`\rProvisioning your environment${dotsString.padEnd(3, ' ')}`);
+        dots = (dots % 3) + 1;
+        loadingAnimationRef.current = window.setTimeout(animateLoading, 500);
+      }
+    };
+    animateLoading();
+
     try {
       const socket = new WebSocket(wsUrl);
-      console.log('WebSocket instance created');
       socketRef.current = socket;
 
       socket.onopen = () => {
         console.log('WebSocket onopen event fired');
         setIsConnected(true);
-        term.writeln('Connected to terminal.');
-        term.writeln('Type commands and press Enter to execute them.');
-        term.writeln('');
 
-        // Test the connection by sending a ping
-        try {
-          socket.send(JSON.stringify({ type: 'ping' }));
-          console.log('Ping sent to server');
-        } catch (e) {
-          console.error('Error sending ping:', e);
-        }
-
-        // Set up the data handler after socket is connected
-        setupTerminalDataHandler(term, socket);
+        // WebSocket is connected, but we need to wait for data to confirm pod is ready
+        // We'll keep the loading animation running until we get real data
       };
 
       socket.onmessage = (event) => {
         console.log('Received message from server:', event.data);
+
+        // If this is the first message, clear the loading animation and show welcome message
+        if (!podReadyRef.current) {
+          podReadyRef.current = true;
+
+          // Clear loading animation
+          if (loadingAnimationRef.current) {
+            clearTimeout(loadingAnimationRef.current);
+            loadingAnimationRef.current = null;
+          }
+
+          // Clear the current line
+          term.write('\r\x1B[2K');
+
+          // Write welcome message
+          term.writeln('Connected to terminal.');
+          term.writeln('Type commands and press Enter to execute them.');
+          term.writeln('');
+
+          // Set up the data handler after pod is ready
+          setupTerminalDataHandler(term, socket);
+        }
+
         term.write(event.data);
       };
 
       socket.onclose = (event) => {
         console.log('WebSocket connection closed:', event.code, event.reason);
         setIsConnected(false);
+
+        // Clear loading animation if it's still running
+        if (loadingAnimationRef.current) {
+          clearTimeout(loadingAnimationRef.current);
+          loadingAnimationRef.current = null;
+        }
+
         term.writeln('\r\nDisconnected from terminal.');
+        podReadyRef.current = false;
       };
 
       socket.onerror = (error) => {
         console.error('WebSocket error occurred:', error);
         setIsConnected(false);
+
+        // Clear loading animation if it's still running
+        if (loadingAnimationRef.current) {
+          clearTimeout(loadingAnimationRef.current);
+          loadingAnimationRef.current = null;
+        }
+
         term.writeln(`\r\nError connecting to terminal server. Please try again later.`);
+        podReadyRef.current = false;
       };
     } catch (error) {
       console.error('Error creating WebSocket instance:', error);
+
+      // Clear loading animation if it's still running
+      if (loadingAnimationRef.current) {
+        clearTimeout(loadingAnimationRef.current);
+        loadingAnimationRef.current = null;
+      }
+
       term.writeln(`\r\nFailed to create WebSocket connection: ${error.message}`);
     }
   }, [assessmentId, setIsConnected]);
