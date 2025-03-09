@@ -10,12 +10,14 @@ interface XTermComponentsProps {
   assessmentId: string;
   terminalRef: MutableRefObject<HTMLDivElement | null>;
   setIsConnected: Dispatch<SetStateAction<boolean>>;
+  fontSize: number;
 }
 
 export default function XTermComponents({
   assessmentId,
   terminalRef,
-  setIsConnected
+  setIsConnected,
+  fontSize
 }: XTermComponentsProps) {
   const xtermRef = useRef<XTerm | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
@@ -180,7 +182,7 @@ export default function XTermComponents({
         brightWhite: '#fafafa', // zinc-50
       },
       fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-      fontSize: 14,
+      fontSize: fontSize,
       letterSpacing: 0,
       lineHeight: 1.2,
     });
@@ -219,8 +221,20 @@ export default function XTermComponents({
       }
     };
 
+    // Handle font size change
+    const handleFontSizeChange = (event: CustomEvent) => {
+      if (term && event.detail) {
+        const newSize = event.detail;
+        term.options.fontSize = newSize;
+        if (fitAddon) {
+          fitAddon.fit();
+        }
+      }
+    };
+
     window.addEventListener('resize', handleResize);
     window.addEventListener('terminal:clear', handleClear);
+    window.addEventListener('terminal:fontSizeChange', handleFontSizeChange as EventListener);
 
     // Initial resize
     handleResize();
@@ -229,6 +243,7 @@ export default function XTermComponents({
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('terminal:clear', handleClear);
+      window.removeEventListener('terminal:fontSizeChange', handleFontSizeChange as EventListener);
       if (socketRef.current) {
         socketRef.current.close();
       }
@@ -236,7 +251,7 @@ export default function XTermComponents({
         term.dispose();
       }
     };
-  }, [assessmentId, terminalRef, connectWebSocket]);
+  }, [assessmentId, terminalRef, connectWebSocket, fontSize]);
 
   return null; // This component only handles logic, rendering is done by the parent
 }
