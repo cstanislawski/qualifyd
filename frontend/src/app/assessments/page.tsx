@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useAuth } from '@/utils/auth';
-import { useRouter } from 'next/navigation';
+import AuthCheck from '@/components/AuthCheck';
 
 interface CompanyAssessment {
   id: string;
@@ -27,97 +27,80 @@ interface CandidateAssessment {
 }
 
 export default function AssessmentsPage() {
-  const { isLoggedIn, isCompanyUser, isCandidate } = useAuth();
-  const router = useRouter();
-  const [companyAssessments, setCompanyAssessments] = useState<CompanyAssessment[]>([]);
-  const [candidateAssessments, setCandidateAssessments] = useState<CandidateAssessment[]>([]);
+  const { isCompanyUser, isCandidate } = useAuth();
   const [filter, setFilter] = useState<'all' | 'scheduled' | 'in-progress' | 'completed'>('all');
 
-  useEffect(() => {
-    // Check authentication
-    if (!isLoggedIn) {
-      router.push('/login');
-      return;
-    }
+  // Mock data for company users
+  const companyAssessments: CompanyAssessment[] = [
+    {
+      id: '1',
+      candidateName: 'Jane Doe',
+      date: '2023-06-15T10:00:00Z',
+      status: 'completed',
+      score: 85,
+      templateName: 'Kubernetes Basics'
+    },
+    {
+      id: '2',
+      candidateName: 'John Smith',
+      date: '2023-06-18T14:00:00Z',
+      status: 'completed',
+      score: 92,
+      templateName: 'Linux Administration'
+    },
+    {
+      id: '3',
+      candidateName: 'Emma Wilson',
+      date: '2023-06-20T09:30:00Z',
+      status: 'in-progress',
+      templateName: 'Docker Fundamentals'
+    },
+    {
+      id: '4',
+      candidateName: 'Michael Brown',
+      date: new Date(Date.now() + 86400000 * 2).toISOString(), // 2 days in the future
+      status: 'scheduled',
+      templateName: 'CI/CD Pipeline Setup'
+    },
+    {
+      id: '5',
+      candidateName: 'Sarah Lee',
+      date: new Date(Date.now() + 86400000 * 5).toISOString(), // 5 days in the future
+      status: 'scheduled',
+      templateName: 'Network Security'
+    },
+  ];
 
-    if (isCompanyUser()) {
-      // Mock data for company users
-      const mockCompanyAssessments: CompanyAssessment[] = [
-        {
-          id: '1',
-          candidateName: 'Jane Doe',
-          date: '2023-06-15T10:00:00Z',
-          status: 'completed',
-          score: 85,
-          templateName: 'Kubernetes Basics'
-        },
-        {
-          id: '2',
-          candidateName: 'John Smith',
-          date: '2023-06-18T14:00:00Z',
-          status: 'completed',
-          score: 92,
-          templateName: 'Linux Administration'
-        },
-        {
-          id: '3',
-          candidateName: 'Emma Wilson',
-          date: '2023-06-20T09:30:00Z',
-          status: 'in-progress',
-          templateName: 'Docker Fundamentals'
-        },
-        {
-          id: '4',
-          candidateName: 'Michael Brown',
-          date: new Date(Date.now() + 86400000 * 2).toISOString(), // 2 days in the future
-          status: 'scheduled',
-          templateName: 'CI/CD Pipeline Setup'
-        },
-        {
-          id: '5',
-          candidateName: 'Sarah Lee',
-          date: new Date(Date.now() + 86400000 * 5).toISOString(), // 5 days in the future
-          status: 'scheduled',
-          templateName: 'Network Security'
-        },
-      ];
-      setCompanyAssessments(mockCompanyAssessments);
-    }
-
-    if (isCandidate()) {
-      // Mock data for candidates
-      const mockCandidateAssessments: CandidateAssessment[] = [
-        {
-          id: '123',
-          title: 'Kubernetes Troubleshooting Assessment',
-          company: 'TechCorp Inc.',
-          duration: '90 minutes',
-          scheduledDate: 'Tomorrow at 2:30 PM',
-          status: 'Scheduled',
-          statusColor: 'green',
-        },
-        {
-          id: '456',
-          title: 'Linux Server Troubleshooting',
-          company: 'DevOps Solutions Ltd.',
-          duration: '60 minutes',
-          scheduledDate: 'Available until Mar 15, 2025',
-          status: 'Available Now',
-          statusColor: 'blue',
-        },
-        {
-          id: '789',
-          title: 'Docker Compose Challenge',
-          company: 'Cloud Innovations Inc.',
-          score: '92/100',
-          completedDate: 'Completed on Feb 28, 2025',
-          status: 'Completed',
-          statusColor: 'gray',
-        },
-      ];
-      setCandidateAssessments(mockCandidateAssessments);
-    }
-  }, [isLoggedIn, isCompanyUser, isCandidate, router]);
+  // Mock data for candidates
+  const candidateAssessments: CandidateAssessment[] = [
+    {
+      id: '123',
+      title: 'Kubernetes Troubleshooting Assessment',
+      company: 'TechCorp Inc.',
+      duration: '90 minutes',
+      scheduledDate: 'Tomorrow at 2:30 PM',
+      status: 'Scheduled',
+      statusColor: 'green',
+    },
+    {
+      id: '456',
+      title: 'Linux Server Troubleshooting',
+      company: 'DevOps Solutions Ltd.',
+      duration: '60 minutes',
+      scheduledDate: 'Available until Mar 15, 2025',
+      status: 'Available Now',
+      statusColor: 'blue',
+    },
+    {
+      id: '789',
+      title: 'Docker Compose Challenge',
+      company: 'Cloud Innovations Inc.',
+      score: '92/100',
+      completedDate: 'Completed on Feb 28, 2025',
+      status: 'Completed',
+      statusColor: 'gray',
+    },
+  ];
 
   // Define status priority for sorting company assessments
   const statusPriority: Record<string, number> = {
@@ -143,7 +126,7 @@ export default function AssessmentsPage() {
     : sortedCompanyAssessments.filter(a => a.status === filter);
 
   return (
-    <>
+    <AuthCheck>
       {isCompanyUser() && (
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
@@ -321,6 +304,6 @@ export default function AssessmentsPage() {
           </div>
         </div>
       )}
-    </>
+    </AuthCheck>
   );
 }
