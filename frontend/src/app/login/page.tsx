@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/utils/auth';
@@ -10,8 +10,15 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, isLoggedIn, isLoading: isAuthLoading } = useAuth();
   const router = useRouter();
+
+  // Check if the user is already logged in
+  useEffect(() => {
+    if (!isAuthLoading && isLoggedIn) {
+      router.push('/assessments');
+    }
+  }, [isLoggedIn, isAuthLoading, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +36,15 @@ export default function Login() {
       setIsLoading(false);
     }
   };
+
+  // If the auth is still loading or user is already logged in, show a loading indicator
+  if (isAuthLoading || isLoggedIn) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-full flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">

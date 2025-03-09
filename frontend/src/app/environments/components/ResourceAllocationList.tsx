@@ -449,21 +449,21 @@ export function ResourceAllocationList() {
             <div className="flex gap-2">
               <Button
                 size="sm"
-                variant={timeframe === '7d' ? 'default' : 'outline'}
+                variant={timeframe === '7d' ? 'primary' : 'outline'}
                 onClick={() => setView2('7d')}
               >
                 7d
               </Button>
               <Button
                 size="sm"
-                variant={timeframe === '30d' ? 'default' : 'outline'}
+                variant={timeframe === '30d' ? 'primary' : 'outline'}
                 onClick={() => setView2('30d')}
               >
                 30d
               </Button>
               <Button
                 size="sm"
-                variant={timeframe === '90d' ? 'default' : 'outline'}
+                variant={timeframe === '90d' ? 'primary' : 'outline'}
                 onClick={() => setView2('90d')}
               >
                 90d

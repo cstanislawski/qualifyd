@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Pricing - Qualifyd',
@@ -35,7 +36,9 @@ export default function Pricing() {
                 <span className="relative z-10">Choose the</span>
                 <span className="absolute -bottom-1.5 left-0 w-full h-[0.5px] bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent"></span>
               </span>
-              <span className="block mt-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-400">Right Plan for You</span>
+              <span className="block mt-2 bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-purple-400 to-blue-400">
+                Right Plan for You
+              </span>
             </h1>
 
             <p className="mt-6 text-xl text-zinc-300/90 max-w-2xl mx-auto leading-relaxed">
@@ -381,6 +384,30 @@ export default function Pricing() {
             <div className="bg-zinc-900/70 border border-zinc-800 rounded-xl p-6 hover:border-indigo-500/30 transition-all duration-300">
               <h4 className="text-lg font-medium text-white mb-2">What happens if I exceed my environment minutes?</h4>
               <p className="text-zinc-400">If you exceed your included environment minutes, additional usage will be billed at the overage rate specified in your plan. You&apos;ll receive notifications as you approach your limit.</p>
+            </div>
+          </div>
+
+          {/* Help Center Link Section */}
+          <div className="flex flex-col items-center justify-center mt-8 mb-4 text-center">
+            <div className="max-w-2xl mx-auto px-4">
+              <h3 className="text-xl font-medium text-zinc-100 mb-3">More questions?</h3>
+              <p className="text-zinc-400 mb-6">
+                Visit our Help Center for detailed information about our plans, features, and more frequently asked questions.
+              </p>
+              <Link
+                href="/help"
+                className="inline-flex items-center justify-center px-6 py-2.5 bg-zinc-800/80 hover:bg-zinc-800 text-zinc-100 rounded-lg border border-zinc-700/50 hover:border-zinc-600 transition-all duration-300 font-medium text-sm group"
+              >
+                Visit Help Center
+                <svg
+                  className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform duration-300"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
             </div>
           </div>
         </div>
