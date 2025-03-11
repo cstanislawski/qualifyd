@@ -39,6 +39,12 @@ const (
 	DefaultTemplateType = "default"
 	// PodTTL is the time-to-live for terminal pods after last connection
 	PodTTL = 2 * time.Hour
+	// CreatedAtAnnotationKey is the key for the created-at annotation
+	CreatedAtAnnotationKey = "created-at"
+	// LastActivityAnnotationKey is the key for the last-activity annotation
+	LastActivityAnnotationKey = "last-activity"
+	// TTLAnnotationKey is the key for the TTL annotation
+	TTLAnnotationKey = "ttl"
 )
 
 // TerminalPodConfig contains configuration for creating a terminal pod
@@ -128,6 +134,9 @@ func (c *Client) CreateTerminalPod(ctx context.Context, config *TerminalPodConfi
 	pod.ObjectMeta.GenerateName = fmt.Sprintf("%s-%s-%s-", TerminalPodNamePrefix, config.AssessmentID, config.SessionID)
 	pod.ObjectMeta.Namespace = c.namespace
 
+	// Set a simpler hostname that only uses the assessment ID
+	pod.Spec.Hostname = fmt.Sprintf("terminal-%s", config.AssessmentID)
+
 	// Set required labels
 	if pod.ObjectMeta.Labels == nil {
 		pod.ObjectMeta.Labels = make(map[string]string)
@@ -153,43 +162,24 @@ func (c *Client) CreateTerminalPod(ctx context.Context, config *TerminalPodConfi
 		pod.ObjectMeta.Annotations[k] = v
 	}
 
-	// Update container configuration if specified
-	if len(pod.Spec.Containers) > 0 {
-		container := &pod.Spec.Containers[0]
-
-		// Set image if provided
-		if config.Image != "" {
-			container.Image = config.Image
-		}
-
-		// Update resource requests/limits if provided
-		if config.CPU != "" || config.Memory != "" {
-			if container.Resources.Requests == nil {
-				container.Resources.Requests = corev1.ResourceList{}
-			}
-			if container.Resources.Limits == nil {
-				container.Resources.Limits = corev1.ResourceList{}
-			}
-
-			if config.CPU != "" {
-				quantity := resource.MustParse(config.CPU)
-				container.Resources.Requests[corev1.ResourceCPU] = quantity
-				container.Resources.Limits[corev1.ResourceCPU] = quantity
-			}
-			if config.Memory != "" {
-				quantity := resource.MustParse(config.Memory)
-				container.Resources.Requests[corev1.ResourceMemory] = quantity
-				container.Resources.Limits[corev1.ResourceMemory] = quantity
-			}
-		}
+	// Set the image if provided
+	if config.Image != "" {
+		pod.Spec.Containers[0].Image = config.Image
+	} else if templateImage := os.Getenv("TERMINAL_IMAGE"); templateImage != "" {
+		pod.Spec.Containers[0].Image = templateImage
 	}
 
-	c.log.Info("Creating terminal pod", map[string]interface{}{
-		"assessmentID": config.AssessmentID,
-		"sessionID":    config.SessionID,
-		"namespace":    c.namespace,
-		"templateType": templateType,
-	})
+	// Set the resources if provided
+	if config.CPU != "" || config.Memory != "" {
+		if config.CPU != "" {
+			pod.Spec.Containers[0].Resources.Requests[corev1.ResourceCPU] = resource.MustParse(config.CPU)
+			pod.Spec.Containers[0].Resources.Limits[corev1.ResourceCPU] = resource.MustParse(config.CPU)
+		}
+		if config.Memory != "" {
+			pod.Spec.Containers[0].Resources.Requests[corev1.ResourceMemory] = resource.MustParse(config.Memory)
+			pod.Spec.Containers[0].Resources.Limits[corev1.ResourceMemory] = resource.MustParse(config.Memory)
+		}
+	}
 
 	// Create the pod
 	created, err := c.clientset.CoreV1().Pods(c.namespace).Create(ctx, pod, metav1.CreateOptions{})
@@ -198,21 +188,19 @@ func (c *Client) CreateTerminalPod(ctx context.Context, config *TerminalPodConfi
 	}
 
 	c.log.Info("Terminal pod created", map[string]interface{}{
-		"assessmentID": config.AssessmentID,
-		"sessionID":    config.SessionID,
 		"podName":      created.Name,
 		"namespace":    c.namespace,
-		"templateType": templateType,
+		"assessmentID": config.AssessmentID,
+		"sessionID":    config.SessionID,
 	})
 
 	// Wait for the pod to be ready
-	if err := c.waitForPodReady(ctx, created.Name); err != nil {
+	if err := c.WaitForPodReady(ctx, created.Name); err != nil {
 		// Don't delete the pod if it's not ready; let it be investigated
 		return nil, fmt.Errorf("terminal pod not ready: %w", err)
 	}
 
-	// Get the latest pod state
-	return c.clientset.CoreV1().Pods(c.namespace).Get(ctx, created.Name, metav1.GetOptions{})
+	return created, nil
 }
 
 // UpdatePodActivity updates the last activity timestamp for a pod
@@ -288,8 +276,8 @@ func (c *Client) GetPodIP(ctx context.Context, podName string) (string, error) {
 	return pod.Status.PodIP, nil
 }
 
-// waitForPodReady waits for a pod to be in the ready state
-func (c *Client) waitForPodReady(ctx context.Context, podName string) error {
+// WaitForPodReady waits for a pod to be in the ready state
+func (c *Client) WaitForPodReady(ctx context.Context, podName string) error {
 	c.log.Info("Waiting for pod to be ready", map[string]interface{}{
 		"podName":   podName,
 		"namespace": c.namespace,
@@ -321,4 +309,21 @@ func (c *Client) waitForPodReady(ctx context.Context, podName string) error {
 
 		return false, nil
 	})
+}
+
+// ListTerminalPods retrieves all terminal pods for a given assessment ID
+func (c *Client) ListTerminalPods(ctx context.Context, assessmentID string) ([]corev1.Pod, error) {
+	// Define label selector to find terminal pods for this assessment
+	labelSelector := fmt.Sprintf("%s=%s,%s=%s",
+		TerminalLabelKey, TerminalLabelValue,
+		AssessmentIDLabelKey, assessmentID)
+
+	pods, err := c.clientset.CoreV1().Pods(c.namespace).List(ctx, metav1.ListOptions{
+		LabelSelector: labelSelector,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to list terminal pods: %w", err)
+	}
+
+	return pods.Items, nil
 }

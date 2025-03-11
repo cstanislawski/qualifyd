@@ -11,13 +11,42 @@ const XTermComponents = dynamic(
   { ssr: false }
 );
 
+// Define connection status type
+export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
+
 interface TerminalProps {
   assessmentId: string;
 }
 
 export default function Terminal({ assessmentId }: TerminalProps) {
   const terminalRef = useRef<HTMLDivElement>(null);
-  const [isConnected, setIsConnected] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+
+  // Get badge variant based on connection status
+  const getBadgeVariant = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return 'success';
+      case 'connecting':
+        return 'warning';
+      case 'disconnected':
+      default:
+        return 'destructive';
+    }
+  };
+
+  // Get badge text based on connection status
+  const getBadgeText = () => {
+    switch (connectionStatus) {
+      case 'connected':
+        return 'Connected';
+      case 'connecting':
+        return 'Connecting';
+      case 'disconnected':
+      default:
+        return 'Disconnected';
+    }
+  };
 
   // Render only the terminal container in SSR
   return (
@@ -31,10 +60,10 @@ export default function Terminal({ assessmentId }: TerminalProps) {
           <div className="flex items-center gap-2">
             <span>Status:</span>
             <Badge
-              variant={isConnected ? "success" : "destructive"}
+              variant={getBadgeVariant()}
               className="font-mono"
             >
-              {isConnected ? 'Connected' : 'Disconnected'}
+              {getBadgeText()}
             </Badge>
           </div>
         </div>
@@ -60,7 +89,7 @@ export default function Terminal({ assessmentId }: TerminalProps) {
         <XTermComponents
           assessmentId={assessmentId}
           terminalRef={terminalRef}
-          setIsConnected={setIsConnected}
+          setConnectionStatus={setConnectionStatus}
         />
       </div>
     </div>

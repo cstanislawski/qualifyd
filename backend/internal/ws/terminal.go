@@ -112,6 +112,10 @@ type TerminalHub struct {
 	// Mutex for terminals map
 	mu sync.Mutex
 
+	// Map of mutexes for each assessment ID to prevent race conditions
+	// when creating pods for the same assessment
+	assessmentMutexes sync.Map
+
 	// Done channel for clean shutdown
 	done chan struct{}
 }
@@ -209,29 +213,96 @@ func ServeTerminalWs(hub *TerminalHub, w http.ResponseWriter, r *http.Request, a
 
 	hub.register <- terminal
 
-	// Try to get existing pod first
+	// Use mutex to protect the pod check and creation process
+	// This prevents race conditions where multiple clients might create multiple pods
 	var pod *corev1.Pod
+
+	// Get the mutex for this assessment ID
+	assessmentMutex := hub.getAssessmentMutex(assessmentID)
+
+	// Track whether we need pod creation
+	needPodCreation := false
+
+	// If not explicitly requesting a new session, try to find existing pod
 	if !newSession {
+		// Lock the mutex for this assessment ID to prevent concurrent pod creation
+		assessmentMutex.Lock()
+
+		// Use defer with a boolean flag to safely control unlocking
+		mutexUnlocked := false
+		defer func() {
+			if !mutexUnlocked {
+				assessmentMutex.Unlock()
+			}
+		}()
+
+		// Try to find terminal pod with the provided session ID first
 		pod, err = hub.K8sClient.GetTerminalPod(r.Context(), assessmentID, sessionID)
 		if err != nil {
-			logger.Info("No existing pod found, will create new one", map[string]interface{}{
+			// If no pod found with the session ID, try to find any pod for this assessment
+			// This handles cases where the session ID might be different or not provided
+			logger.Info("No existing pod found with provided session ID, checking for any pod for this assessment", map[string]interface{}{
 				"assessmentID": assessmentID,
 				"sessionID":    sessionID,
 				"error":        err.Error(),
 			})
+
+			// List all terminal pods for this assessment ID
+			pods, listErr := hub.K8sClient.ListTerminalPods(r.Context(), assessmentID)
+			if listErr == nil && len(pods) > 0 {
+				// Use the first pod we find for this assessment
+				pod = &pods[0]
+				// Update the session ID to match the existing pod
+				existingSessionID := pod.Labels["app.qualifyd.io/session-id"]
+				if existingSessionID != "" && existingSessionID != sessionID {
+					logger.Info("Using existing pod with different session ID", map[string]interface{}{
+						"assessmentID":       assessmentID,
+						"requestedSessionID": sessionID,
+						"existingSessionID":  existingSessionID,
+						"podName":            pod.Name,
+					})
+					sessionID = existingSessionID
+					terminal.config.SessionID = sessionID
+				}
+				// Always store the full pod name with suffix
+				terminal.podName = pod.Name
+			} else {
+				// No existing pod found, we'll need to create one
+				needPodCreation = true
+			}
 		} else {
-			logger.Info("Found existing pod", map[string]interface{}{
+			logger.Info("Found existing pod with provided session ID", map[string]interface{}{
 				"assessmentID": assessmentID,
 				"sessionID":    sessionID,
 				"podName":      pod.Name,
 			})
+			// Always store the full pod name with suffix
 			terminal.podName = pod.Name
 		}
+
+		// If we don't need to create a pod, unlock the mutex now
+		if !needPodCreation && pod != nil {
+			assessmentMutex.Unlock()
+			mutexUnlocked = true
+		}
+	} else {
+		// Explicitly requested new session
+		needPodCreation = true
 	}
 
 	// Create new pod if needed
-	if pod == nil {
+	if needPodCreation || pod == nil {
+		// For newSession=true, we need to lock here
+		if newSession {
+			assessmentMutex.Lock()
+			defer assessmentMutex.Unlock()
+		}
+
 		err = terminal.provisionPod(r.Context())
+
+		// If not a new session, we already have a defer to unlock
+		// No need to unlock here
+
 		if err != nil {
 			logger.Error("Failed to provision terminal pod", err, map[string]interface{}{
 				"assessmentID": assessmentID,
@@ -256,105 +327,229 @@ func ServeTerminalWs(hub *TerminalHub, w http.ResponseWriter, r *http.Request, a
 		}
 	}
 
-	// Start activity update ticker
-	terminal.activityTicker = time.NewTicker(5 * time.Minute)
-	go terminal.updateActivity()
-
-	logger.Info("Attempting to connect to SSH server in pod", map[string]interface{}{
-		"assessmentID": assessmentID,
-	})
-
-	if err := terminal.connectSSH(); err != nil {
-		logger.Error("Failed to connect to SSH server in pod", err, map[string]interface{}{
-			"assessmentID": assessmentID,
-		})
-
-		// Send error message to client
-		errorMsg := map[string]interface{}{
-			"type":    "error",
-			"message": fmt.Sprintf("Failed to connect to terminal: %v", err),
+	// Wait for pod to be ready before proceeding
+	// Instead of blocking the whole connection, we'll send progress updates
+	go func() {
+		// Send initial provisioning message
+		statusMsg := map[string]interface{}{
+			"type":    "status",
+			"status":  "provisioning",
+			"message": "Provisioning terminal environment...",
 		}
-		errorJSON, _ := json.Marshal(errorMsg)
-		terminal.send <- errorJSON
+		statusJSON, _ := json.Marshal(statusMsg)
+		terminal.send <- statusJSON
 
-		// Wait a moment before unregistering to allow the error to be sent
-		time.Sleep(1 * time.Second)
+		// Create a timeout context for the pod readiness check
+		ctx, cancel := context.WithTimeout(r.Context(), 120*time.Second)
+		defer cancel()
 
-		hub.unregister <- terminal
-		conn.Close()
-		return
+		// Poll for pod readiness
+		ticker := time.NewTicker(2 * time.Second)
+		defer ticker.Stop()
+
+		startTime := time.Now()
+		for {
+			select {
+			case <-ctx.Done():
+				// If we time out, send an error message
+				errorMsg := map[string]interface{}{
+					"type":    "error",
+					"message": "Timeout waiting for terminal environment to be ready",
+				}
+				errorJSON, _ := json.Marshal(errorMsg)
+				terminal.send <- errorJSON
+
+				logger.Error("Pod not ready - timeout", fmt.Errorf("timeout waiting for pod"), map[string]interface{}{
+					"assessmentID": assessmentID,
+					"sessionID":    sessionID,
+					"podName":      terminal.podName,
+					"duration":     time.Since(startTime).String(),
+				})
+
+				// Wait a moment before unregistering to allow the error to be sent
+				time.Sleep(1 * time.Second)
+				hub.unregister <- terminal
+				conn.Close()
+				return
+			case <-ticker.C:
+				// Check if pod is ready
+				k8sClient, err := terminal.getK8sClient()
+				if err != nil {
+					continue
+				}
+
+				// Use a short timeout for the individual readiness check
+				checkCtx, checkCancel := context.WithTimeout(ctx, 5*time.Second)
+				err = k8sClient.WaitForPodReady(checkCtx, terminal.podName)
+				checkCancel()
+
+				if err == nil {
+					// Pod is ready, proceed with SSH connection
+					// Send ready message
+					readyMsg := map[string]interface{}{
+						"type":    "status",
+						"status":  "ready",
+						"message": "Terminal environment is ready, connecting...",
+					}
+					readyJSON, _ := json.Marshal(readyMsg)
+					terminal.send <- readyJSON
+
+					// Start activity update ticker
+					terminal.activityTicker = time.NewTicker(5 * time.Minute)
+					go terminal.updateActivity()
+
+					logger.Info("Pod is ready, connecting to SSH", map[string]interface{}{
+						"assessmentID": assessmentID,
+						"podName":      terminal.podName,
+						"duration":     time.Since(startTime).String(),
+					})
+
+					// Connect to SSH
+					if err := terminal.connectSSH(); err != nil {
+						logger.Error("Failed to connect to SSH server in pod", err, map[string]interface{}{
+							"assessmentID": assessmentID,
+						})
+
+						// Send error message to client
+						errorMsg := map[string]interface{}{
+							"type":    "error",
+							"message": fmt.Sprintf("Failed to connect to terminal: %v", err),
+						}
+						errorJSON, _ := json.Marshal(errorMsg)
+						terminal.send <- errorJSON
+
+						// Wait a moment before unregistering to allow the error to be sent
+						time.Sleep(1 * time.Second)
+
+						hub.unregister <- terminal
+						conn.Close()
+						return
+					}
+
+					logger.Info("Successfully connected to SSH server in pod", map[string]interface{}{
+						"assessmentID": assessmentID,
+					})
+
+					// Send session ID to client
+					sessionMsg := map[string]interface{}{
+						"type":      "session",
+						"sessionId": sessionID,
+					}
+					sessionJSON, _ := json.Marshal(sessionMsg)
+					terminal.send <- sessionJSON
+
+					go terminal.readPump(hub)
+					go terminal.writePump()
+
+					logger.Info("Terminal connected", map[string]interface{}{
+						"assessmentID": assessmentID,
+					})
+					return
+				} else {
+					// Pod not ready yet, send progress update
+					elapsedTime := time.Since(startTime).Seconds()
+					progressMsg := map[string]interface{}{
+						"type":    "status",
+						"status":  "waiting",
+						"message": fmt.Sprintf("Waiting for terminal environment to be ready (%.0fs)...", elapsedTime),
+					}
+					progressJSON, _ := json.Marshal(progressMsg)
+					terminal.send <- progressJSON
+
+					logger.Info("Waiting for pod to be ready", map[string]interface{}{
+						"assessmentID": assessmentID,
+						"podName":      terminal.podName,
+						"elapsedTime":  fmt.Sprintf("%.0fs", elapsedTime),
+						"error":        err.Error(),
+					})
+				}
+			}
+		}
+	}()
+
+	// We'll handle the actual connection in the goroutine above
+	select {}
+}
+
+// waitForPodReady waits for the terminal pod to be ready
+func (t *Terminal) waitForPodReady(ctx context.Context) error {
+	if t.podName == "" {
+		return fmt.Errorf("no pod name available")
 	}
 
-	logger.Info("Successfully connected to SSH server in pod", map[string]interface{}{
-		"assessmentID": assessmentID,
-	})
+	k8sClient, err := t.getK8sClient()
+	if err != nil {
+		return fmt.Errorf("failed to get k8s client: %w", err)
+	}
 
-	go terminal.readPump(hub)
-	go terminal.writePump()
+	// Create a timeout context
+	ctx, cancel := context.WithTimeout(ctx, 60*time.Second)
+	defer cancel()
 
-	logger.Info("Terminal connected", map[string]interface{}{
-		"assessmentID": assessmentID,
-	})
+	// Poll for pod readiness
+	ticker := time.NewTicker(2 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("timeout waiting for pod to be ready")
+		case <-ticker.C:
+			// Use the exported WaitForPodReady method from the k8s client
+			err := k8sClient.WaitForPodReady(ctx, t.podName)
+			if err == nil {
+				return nil // Pod is ready
+			}
+
+			// Log pod status for debugging
+			logger.Info("Waiting for pod to be ready", map[string]interface{}{
+				"podName": t.podName,
+				"error":   err.Error(),
+			})
+		}
+	}
 }
 
 // provisionPod provisions a terminal pod for the assessment
 func (t *Terminal) provisionPod(ctx context.Context) error {
-	// Use the K8s client from the hub if available, otherwise try to create a new one
-	var k8sClient *k8s.Client
-	var err error
-
-	// Attempt to use the hub's client first
-	if t.hub != nil && t.hub.K8sClient != nil {
-		k8sClient = t.hub.K8sClient
-		logger.Info("Using existing Kubernetes client from hub", map[string]interface{}{
-			"assessmentID": t.assessmentID,
-		})
-	} else {
-		// Create a new Kubernetes client if the hub's client isn't available
-		logger.Info("Hub Kubernetes client not available, attempting to create new client", map[string]interface{}{
-			"assessmentID": t.assessmentID,
-		})
-
-		namespace := os.Getenv("K8S_NAMESPACE")
-		if namespace == "" {
-			namespace = "default"
-		}
-		k8sClient, err = k8s.NewClient(&logger.DefaultLogger{}, namespace)
-		if err != nil {
-			// If we can't create a K8s client, attempt to use environment variables for a fixed host
-			logger.Error("Failed to create Kubernetes client, attempting fallback to TERMINAL_HOST", err, map[string]interface{}{
-				"assessmentID": t.assessmentID,
-			})
-
-			// If TERMINAL_HOST is set, use it instead of a dynamically provisioned pod
-			if host := getEnv("TERMINAL_HOST", ""); host != "" {
-				logger.Info("Using fixed terminal host", map[string]interface{}{
-					"assessmentID": t.assessmentID,
-					"host":         host,
-				})
-				// Set t.terminalHost to use in connectSSH instead of querying for the pod IP
-				t.terminalHost = host
-				return nil
-			}
-
-			return fmt.Errorf("failed to create Kubernetes client and no TERMINAL_HOST provided: %w", err)
-		}
+	k8sClient, err := t.getK8sClient()
+	if err != nil {
+		return fmt.Errorf("failed to get k8s client: %w", err)
 	}
 
-	// Create pod configuration with template type and session ID
+	// Get namespace from environment variable
+	namespace := os.Getenv("K8S_NAMESPACE")
+	if namespace == "" {
+		namespace = "default"
+	}
+
+	logger.Info("Creating terminal pod", map[string]interface{}{
+		"assessmentID": t.assessmentID,
+		"namespace":    namespace,
+		"sessionID":    t.config.SessionID,
+		"templateType": t.config.TemplateType,
+	})
+
+	// Configure pod creation settings
 	config := &k8s.TerminalPodConfig{
-		AssessmentID: t.config.AssessmentID,
+		AssessmentID: t.assessmentID,
 		SessionID:    t.config.SessionID,
 		TemplateType: t.config.TemplateType,
-		Image:        t.config.CustomImage,
-		CPU:          t.config.CustomCPU,
-		Memory:       t.config.CustomMemory,
-		Labels: map[string]string{
-			"created-by": "qualifyd-backend",
-		},
-		Annotations: map[string]string{
-			"description": "On-demand terminal pod for assessment",
-		},
+	}
+
+	// Use custom image if provided
+	if t.config.CustomImage != "" {
+		config.Image = t.config.CustomImage
+	}
+
+	// Use custom CPU if provided
+	if t.config.CustomCPU != "" {
+		config.CPU = t.config.CustomCPU
+	}
+
+	// Use custom memory if provided
+	if t.config.CustomMemory != "" {
+		config.Memory = t.config.CustomMemory
 	}
 
 	// Create the pod
@@ -363,7 +558,17 @@ func (t *Terminal) provisionPod(ctx context.Context) error {
 		return fmt.Errorf("failed to create terminal pod: %w", err)
 	}
 
+	// Set the pod name for later use
 	t.podName = pod.Name
+
+	logger.Info("Terminal pod created", map[string]interface{}{
+		"assessmentID": t.assessmentID,
+		"namespace":    namespace,
+		"podName":      pod.Name,
+		"sessionID":    t.config.SessionID,
+		"templateType": t.config.TemplateType,
+	})
+
 	return nil
 }
 
@@ -902,25 +1107,88 @@ func (t *Terminal) handleOutput(pipe io.Reader) {
 	}
 }
 
-// updateActivity periodically updates the pod's last activity timestamp
+// updateActivity sends periodic updates to the pod to keep the last-activity timestamp fresh
 func (t *Terminal) updateActivity() {
+	if t.activityTicker == nil {
+		return
+	}
+
 	defer t.activityTicker.Stop()
 
 	for {
 		select {
 		case <-t.activityTicker.C:
-			if t.podName != "" {
-				ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-				if err := t.hub.K8sClient.UpdatePodActivity(ctx, t.podName); err != nil {
-					logger.Error("Failed to update pod activity", err, map[string]interface{}{
-						"assessmentID": t.assessmentID,
-						"sessionID":    t.config.SessionID,
-						"podName":      t.podName,
-					})
-				}
-				cancel()
+			// Get the K8s client
+			k8sClient, err := t.getK8sClient()
+			if err != nil {
+				logger.Error("Failed to get K8s client for activity update", err, map[string]interface{}{
+					"assessmentID": t.assessmentID,
+					"sessionID":    t.config.SessionID,
+				})
+				continue
 			}
-		case <-t.hub.done: // Add a done channel to TerminalHub for clean shutdown
+
+			// First, try with the stored pod name
+			if t.podName != "" {
+				err = k8sClient.UpdatePodActivity(context.Background(), t.podName)
+				if err == nil {
+					// Success, continue to next tick
+					continue
+				}
+
+				// Log the error but don't return yet - we'll try alternative methods
+				logger.Error("Failed to update pod activity", err, map[string]interface{}{
+					"assessmentID": t.assessmentID,
+					"podName":      t.podName,
+					"sessionID":    t.config.SessionID,
+				})
+			}
+
+			// If the stored pod name didn't work, try to find the pod by assessment ID and session ID
+			pods, listErr := k8sClient.ListTerminalPods(context.Background(), t.assessmentID)
+			if listErr != nil {
+				logger.Error("Failed to list terminal pods for activity update", listErr, map[string]interface{}{
+					"assessmentID": t.assessmentID,
+					"sessionID":    t.config.SessionID,
+				})
+				continue
+			}
+
+			// Look for the pod with the matching session ID
+			podFound := false
+			for _, pod := range pods {
+				sessionID := pod.Labels["app.qualifyd.io/session-id"]
+				if sessionID == t.config.SessionID {
+					// Found the pod, update its activity
+					err = k8sClient.UpdatePodActivity(context.Background(), pod.Name)
+					if err != nil {
+						logger.Error("Failed to update activity for found pod", err, map[string]interface{}{
+							"assessmentID": t.assessmentID,
+							"podName":      pod.Name,
+							"sessionID":    t.config.SessionID,
+						})
+					} else {
+						// Update our stored pod name to the correct one
+						t.podName = pod.Name
+						logger.Info("Updated activity for found pod", map[string]interface{}{
+							"assessmentID": t.assessmentID,
+							"podName":      pod.Name,
+							"sessionID":    t.config.SessionID,
+						})
+						podFound = true
+					}
+					break
+				}
+			}
+
+			if !podFound {
+				logger.Warn("No pod found for activity update", map[string]interface{}{
+					"assessmentID": t.assessmentID,
+					"sessionID":    t.config.SessionID,
+				})
+			}
+
+		case <-t.hub.done:
 			return
 		}
 	}
@@ -930,4 +1198,11 @@ func (t *Terminal) updateActivity() {
 func generateSessionID() string {
 	// Use a UUID v4 for session ID
 	return uuid.New().String()
+}
+
+// getAssessmentMutex gets or creates a mutex for the given assessment ID
+func (h *TerminalHub) getAssessmentMutex(assessmentID string) *sync.Mutex {
+	// Get existing mutex or create new one
+	actual, _ := h.assessmentMutexes.LoadOrStore(assessmentID, &sync.Mutex{})
+	return actual.(*sync.Mutex)
 }

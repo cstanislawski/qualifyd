@@ -1,36 +1,69 @@
 'use client';
 
-import { useEffect, useRef, MutableRefObject, Dispatch, SetStateAction, useCallback } from 'react';
+import { useEffect, useRef, MutableRefObject, Dispatch, SetStateAction, useCallback, useState } from 'react';
 import { Terminal as XTerm } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 import { WebLinksAddon } from '@xterm/addon-web-links';
 import '@xterm/xterm/css/xterm.css';
+import { ConnectionStatus } from './Terminal';
 
 interface XTermComponentsProps {
   assessmentId: string;
   terminalRef: MutableRefObject<HTMLDivElement | null>;
-  setIsConnected: Dispatch<SetStateAction<boolean>>;
+  setConnectionStatus: Dispatch<SetStateAction<ConnectionStatus>>;
 }
 
 export default function XTermComponents({
   assessmentId,
   terminalRef,
-  setIsConnected
+  setConnectionStatus
 }: XTermComponentsProps) {
   const xtermRef = useRef<XTerm | null>(null);
   const socketRef = useRef<WebSocket | null>(null);
   const fitAddonRef = useRef<FitAddon | null>(null);
   const loadingAnimationRef = useRef<number | null>(null);
   const podReadyRef = useRef<boolean>(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // Get stored session ID on component mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedSessionId = localStorage.getItem(`terminal_session_${assessmentId}`);
+      if (storedSessionId) {
+        console.log(`Retrieved existing session ID for assessment ${assessmentId}: ${storedSessionId}`);
+        setSessionId(storedSessionId);
+      }
+    }
+  }, [assessmentId]);
+
+  // Store session ID when it changes
+  useEffect(() => {
+    if (sessionId && typeof window !== 'undefined') {
+      console.log(`Storing session ID for assessment ${assessmentId}: ${sessionId}`);
+      localStorage.setItem(`terminal_session_${assessmentId}`, sessionId);
+    }
+  }, [assessmentId, sessionId]);
 
   // Define connectWebSocket as a useCallback to avoid dependency issues
   const connectWebSocket = useCallback((term: XTerm) => {
     console.log('WebSocket connection attempt starting...');
 
+    // Set the status to connecting
+    setConnectionStatus('connecting');
+
     // Always use the same domain as the page for WebSocket connections
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // Connect directly to the backend terminal endpoint using the correct path
-    const wsUrl = `${protocol}//${window.location.host}/ws/terminal/${assessmentId}`;
+
+    // Construct the WebSocket URL with session ID if available
+    let wsUrl = `${protocol}//${window.location.host}/ws/terminal/${assessmentId}`;
+
+    // Add session ID if we have one (for reconnection)
+    if (sessionId) {
+      wsUrl += `?sessionId=${sessionId}`;
+      console.log(`Reconnecting to existing session: ${sessionId}`);
+    } else {
+      console.log('Creating new terminal session');
+    }
 
     console.log('Environment:', process.env.NEXT_PUBLIC_APP_ENV);
     console.log('Page Protocol:', window.location.protocol);
@@ -44,7 +77,13 @@ export default function XTermComponents({
       if (!podReadyRef.current) {
         const dotsString = '.'.repeat(dots);
         term.write('\r\x1B[2K'); // Clear the current line
-        term.write(`\rProvisioning your environment${dotsString.padEnd(3, ' ')}`);
+
+        // Different message for new vs. reconnection
+        const message = sessionId
+          ? `Reconnecting to your environment${dotsString.padEnd(3, ' ')}`
+          : `Provisioning your environment${dotsString.padEnd(3, ' ')}`;
+
+        term.write(`\r${message}`);
         dots = (dots % 3) + 1;
         loadingAnimationRef.current = window.setTimeout(animateLoading, 500);
       }
@@ -57,18 +96,82 @@ export default function XTermComponents({
 
       socket.onopen = () => {
         console.log('WebSocket onopen event fired');
-        setIsConnected(true);
-
-        // WebSocket is connected, but we need to wait for data to confirm pod is ready
-        // We'll keep the loading animation running until we get real data
+        // Explicitly set status to connecting when WebSocket opens
+        setConnectionStatus('connecting');
       };
 
       socket.onmessage = (event) => {
         console.log('Received message from server:', event.data);
 
-        // If this is the first message, clear the loading animation and show welcome message
+        // First try to parse as JSON
+        let isControlMessage = false;
+        try {
+          const messageData = JSON.parse(event.data);
+
+          // Handle different message types
+          if (messageData.type === 'session' && messageData.sessionId) {
+            // Store the session ID for reconnection
+            setSessionId(messageData.sessionId);
+            console.log(`Received session ID from server: ${messageData.sessionId}`);
+            isControlMessage = true;
+          } else if (messageData.type === 'status') {
+            // Handle status updates
+            console.log(`Status update: ${messageData.status} - ${messageData.message}`);
+
+            // Update loading message with server-provided status
+            if (loadingAnimationRef.current) {
+              clearTimeout(loadingAnimationRef.current);
+              loadingAnimationRef.current = null;
+            }
+
+            // Clear the current line and display the status message
+            term.write('\r\x1B[2K');
+            term.write(`\r${messageData.message}`);
+
+            // Update connection status based on backend status
+            if (messageData.status === 'provisioning' || messageData.status === 'waiting') {
+              // Keep the connection status as 'connecting' during provisioning and waiting
+              setConnectionStatus('connecting');
+            } else if (messageData.status === 'ready') {
+              // Still connecting to SSH when pod is ready
+              setConnectionStatus('connecting');
+            }
+
+            isControlMessage = true;
+          } else if (messageData.type === 'error') {
+            // Handle error messages
+            console.error(`Server error: ${messageData.message}`);
+
+            // Clear loading animation
+            if (loadingAnimationRef.current) {
+              clearTimeout(loadingAnimationRef.current);
+              loadingAnimationRef.current = null;
+            }
+
+            // Display error message
+            term.write('\r\x1B[2K'); // Clear current line
+            term.writeln(`\r\n\x1b[31mError: ${messageData.message}\x1b[0m`);
+            term.writeln('Please try again later or contact support if the issue persists.');
+
+            setConnectionStatus('disconnected');
+            podReadyRef.current = false;
+            isControlMessage = true;
+          }
+        } catch {
+          // Not a JSON message, will be treated as terminal output
+        }
+
+        // If it's a control message, don't process further
+        if (isControlMessage) {
+          return;
+        }
+
+        // If this is the first data message (not control), initialize the terminal
         if (!podReadyRef.current) {
           podReadyRef.current = true;
+
+          // Set status to connected after the pod is ready
+          setConnectionStatus('connected');
 
           // Clear loading animation
           if (loadingAnimationRef.current) {
@@ -88,12 +191,13 @@ export default function XTermComponents({
           setupTerminalDataHandler(term, socket);
         }
 
+        // Write data to the terminal
         term.write(event.data);
       };
 
       socket.onclose = (event) => {
         console.log('WebSocket connection closed:', event.code, event.reason);
-        setIsConnected(false);
+        setConnectionStatus('disconnected');
 
         // Clear loading animation if it's still running
         if (loadingAnimationRef.current) {
@@ -107,7 +211,7 @@ export default function XTermComponents({
 
       socket.onerror = (error) => {
         console.error('WebSocket error occurred:', error);
-        setIsConnected(false);
+        setConnectionStatus('disconnected');
 
         // Clear loading animation if it's still running
         if (loadingAnimationRef.current) {
@@ -120,6 +224,7 @@ export default function XTermComponents({
       };
     } catch (error) {
       console.error('Error creating WebSocket instance:', error);
+      setConnectionStatus('disconnected');
 
       // Clear loading animation if it's still running
       if (loadingAnimationRef.current) {
@@ -129,7 +234,7 @@ export default function XTermComponents({
 
       term.writeln(`\r\nFailed to create WebSocket connection: ${error.message}`);
     }
-  }, [assessmentId, setIsConnected]);
+  }, [assessmentId, setConnectionStatus, sessionId]);
 
   const setupTerminalDataHandler = (term: XTerm, socket: WebSocket) => {
     // Handle keyboard input from terminal - send each keystroke directly to the server

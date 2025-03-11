@@ -8,14 +8,28 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+// List of paths to exclude from logging
+var skipLogPaths = map[string]bool{
+	"/health":    true,
+	// "/metrics":   true, # TODO once metrics are implemented
+}
+
 // HTTPMiddleware returns a middleware that logs HTTP requests using the configured zerolog logger
 func HTTPMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Check if this path should be excluded from logging
+		skipLogging := skipLogPaths[r.URL.Path]
+
 		ww := middleware.NewWrapResponseWriter(w, r.ProtoMajor)
 		start := time.Now()
 
 		// Call the next handler
 		next.ServeHTTP(ww, r)
+
+		// Skip logging for excluded paths
+		if skipLogging {
+			return
+		}
 
 		// Log the request
 		duration := time.Since(start)

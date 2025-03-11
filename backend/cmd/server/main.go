@@ -70,16 +70,13 @@ func main() {
 	if namespace == "" {
 		namespace = "default"
 	}
-	log.Debug("Attempting to create Kubernetes client", map[string]interface{}{
-		"namespace": namespace,
-	})
 	k8sClient, err = k8s.NewClient(log, namespace)
 	if err != nil {
-		// Log error but don't exit - continue without K8s capabilities
-		log.Error("Failed to create Kubernetes client, continuing without Kubernetes capabilities", err, map[string]interface{}{
+		log.Error("Failed to create Kubernetes client", err, map[string]interface{}{
 			"namespace": namespace,
 			"error":     err.Error(),
 		})
+		return
 	}
 
 	// Initialize repositories
