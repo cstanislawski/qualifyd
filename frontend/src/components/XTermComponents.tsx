@@ -53,9 +53,11 @@ export default function XTermComponents({
 
     // Always use the same domain as the page for WebSocket connections
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const host = window.location.host;
+    const apiHost = host.replace('app.', 'api.');
 
     // Construct the WebSocket URL with session ID if available
-    let wsUrl = `${protocol}//${window.location.host}/ws/terminal/${assessmentId}`;
+    let wsUrl = `${protocol}//${apiHost}/ws/terminal/${assessmentId}`;
 
     // Add session ID if we have one (for reconnection)
     if (sessionId) {
@@ -80,14 +82,15 @@ export default function XTermComponents({
 
         // Different message for new vs. reconnection
         const message = sessionId
-          ? `Reconnecting to your environment${dotsString.padEnd(3, ' ')}`
-          : `Provisioning your environment${dotsString.padEnd(3, ' ')}`;
+          ? `Reconnecting to your environment${dotsString}`
+          : `Provisioning your environment${dotsString}`;
 
         term.write(`\r${message}`);
         dots = (dots % 3) + 1;
         loadingAnimationRef.current = window.setTimeout(animateLoading, 500);
       }
     };
+    // Start the animation immediately
     animateLoading();
 
     try {
@@ -118,15 +121,17 @@ export default function XTermComponents({
             // Handle status updates
             console.log(`Status update: ${messageData.status} - ${messageData.message}`);
 
-            // Update loading message with server-provided status
-            if (loadingAnimationRef.current) {
-              clearTimeout(loadingAnimationRef.current);
-              loadingAnimationRef.current = null;
-            }
+            // Only stop the loading animation if we're not in a waiting/provisioning state
+            if (messageData.status !== 'waiting' && messageData.status !== 'provisioning') {
+              if (loadingAnimationRef.current) {
+                clearTimeout(loadingAnimationRef.current);
+                loadingAnimationRef.current = null;
+              }
 
-            // Clear the current line and display the status message
-            term.write('\r\x1B[2K');
-            term.write(`\r${messageData.message}`);
+              // Clear the current line and display the status message
+              term.write('\r\x1B[2K');
+              term.write(`\r${messageData.message}`);
+            }
 
             // Update connection status based on backend status
             if (messageData.status === 'provisioning' || messageData.status === 'waiting') {
