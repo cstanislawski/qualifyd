@@ -207,26 +207,28 @@ The infrastructure should be deployed in GCP's GKE. The environments users will 
 
 ### General
 
-- [ ] Make the terminal connection more reliable/robust
-- [ ] Add a noteebook for the candidate/reviewer to take notes during the assessment
-- [ ] Add a dynamic VM scaling mechanism (based on KubeVirt)
-  - [ ] Add a local setup with KubeVirt for MacOS
+- [ ] make the terminal connection more reliable/robust
+- [ ] notebook for the candidate/reviewer to take notes during the assessment
+- [ ] dynamic VM scaling mechanism (based on KubeVirt)
+  - [ ] local setup with KubeVirt for MacOS
 - [ ] Add SSO authentication
 
 ### Candidate Experience
 
-- [ ] Add a file-system view that allows the candidate to move around the file-system and modify files - with something like an embedded VSCode
+- [ ] file-system view that allows the candidate to move around the file-system and modify files - with something like an embedded VSCode
 
 ### Reviewer Experience
 
-- [ ] Add a "terminal" view that allows the reviewer to see the terminal output of the candidate in real-time
-- [ ] Add a "recording" mechanism for the terminal session (i.e. capture the terminal input & output, and let the reviewer watch it)
-- [ ] Add a file-system view that allows the reviewer to see the file-system of the candidate
+- [ ] "terminal" view that allows the reviewer to see the terminal output of the candidate in real-time
+- [ ] "recording" mechanism for the terminal session (i.e. capture the terminal input & output, and let the reviewer watch it)
+- [ ] file-system view that allows the reviewer to see the file-system of the candidate
 
 ### Organization Management
 
-- [ ] Add CRUD for: assessments, assessment templates, task templates, environment templates, users, roles, organizations, integrations, settings, logs, etc.
-  - [ ] Add the ability to create a new environment template from an existing custom environment (i.e. allow the same functionality as with the base environment templates)
-  - [ ] Add the ability to create a new assessment from an existing assessment template
-  - [ ] Add the ability to create a new assessment template from an existing assessment template
-  - [ ] Add the ability to create a new task template from an existing task template
+- [ ] CRUD for: assessments, assessment templates, task templates, environment templates, users, roles, organizations, integrations, settings, logs, etc.
+  - [ ] ability to create a new environment template from an existing custom environment (i.e. allow the same functionality as with the base environment templates)
+  - [ ] assessment creation (from assessment template), management, and scheduling
+    - [ ] email notifications to the candidate for the scheduled assessments with the assessment link
+    - [ ] email notifications to the reviewers for the new assessments (if the reviewer is assigned to the assessment)
+  - [ ] ability to create a new assessment template from an existing assessment template
+  - [ ] ability to create a new task template from an existing task template
