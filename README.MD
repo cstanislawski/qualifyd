@@ -68,8 +68,8 @@ Which could be used to hire:
   - Environment state snapshots at key assessment milestones
   - Automated test results with scoring breakdown
   - Performance metrics including resource utilization and completion time
-- Company management:
-  - Secure company profile with multi-tenant isolation
+- Organization management:
+  - Secure organization profile with multi-tenant isolation
   - Role-based access control with initial roles (admin, editor, viewer)
   - Usage tracking and resource allocation monitoring
   - Basic reporting and assessment analytics
@@ -117,7 +117,7 @@ often have limitations, such as:
 - Poor UX - Unfamiliar interfaces and workflows that distract from assessment
 - Inadequate/Limited Feedback - Limited insights for candidates on performance
 - Lack of Access to Industry-Standard Tools and CLIs
-- Lack of custom scenario support for company-specific tech stacks and workflows
+- Lack of custom scenario support for organization-specific tech stacks and workflows
 
 Qualifyd addresses these limitations by providing realistic, configurable environments that accurately simulate job responsibilities for infrastructure, platform engineering, and DevOps roles - aiming at improving the evaluation accuracy, being transparent about typical technical challenges encountered in the job, and providing a better experience for candidates and reviewers.
 
@@ -202,3 +202,31 @@ Technology stack:
 - Queue system: RabbitMQ
 
 The infrastructure should be deployed in GCP's GKE. The environments users will be using should be deployed via `KubeVirt`, which will deploy the virtual machines in the same GKE cluster.
+
+## TODO
+
+### General
+
+- [ ] Make the terminal connection more reliable/robust
+- [ ] Add a noteebook for the candidate/reviewer to take notes during the assessment
+- [ ] Add a dynamic VM scaling mechanism (based on KubeVirt)
+  - [ ] Add a local setup with KubeVirt for MacOS
+- [ ] Add SSO authentication
+
+### Candidate Experience
+
+- [ ] Add a file-system view that allows the candidate to move around the file-system and modify files - with something like an embedded VSCode
+
+### Reviewer Experience
+
+- [ ] Add a "terminal" view that allows the reviewer to see the terminal output of the candidate in real-time
+- [ ] Add a "recording" mechanism for the terminal session (i.e. capture the terminal input & output, and let the reviewer watch it)
+- [ ] Add a file-system view that allows the reviewer to see the file-system of the candidate
+
+### Organization Management
+
+- [ ] Add CRUD for: assessments, assessment templates, task templates, environment templates, users, roles, organizations, integrations, settings, logs, etc.
+  - [ ] Add the ability to create a new environment template from an existing custom environment (i.e. allow the same functionality as with the base environment templates)
+  - [ ] Add the ability to create a new assessment from an existing assessment template
+  - [ ] Add the ability to create a new assessment template from an existing assessment template
+  - [ ] Add the ability to create a new task template from an existing task template
