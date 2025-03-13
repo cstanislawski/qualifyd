@@ -211,7 +211,7 @@ The infrastructure should be deployed in GCP's GKE. The environments users will 
 - [ ] notebook for the candidate/reviewer to take notes during the assessment
 - [ ] dynamic VM scaling mechanism (based on KubeVirt)
   - [ ] local setup with KubeVirt for MacOS
-- [ ] Add SSO authentication
+- [ ] SSO authentication
 
 ### Candidate Experience
 
@@ -232,3 +232,8 @@ The infrastructure should be deployed in GCP's GKE. The environments users will 
     - [ ] email notifications to the reviewers for the new assessments (if the reviewer is assigned to the assessment)
   - [ ] ability to create a new assessment template from an existing assessment template
   - [ ] ability to create a new task template from an existing task template
+- [ ] RBAC
+  - [ ] custom roles
+  - [ ] proper logging and monitoring
+  - [ ] audit logs
+  - [ ] ability to manage users and roles
