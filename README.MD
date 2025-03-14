@@ -205,35 +205,147 @@ The infrastructure should be deployed in GCP's GKE. The environments users will 
 
 ## TODO
 
-### General
+### Core Infrastructure
 
-- [ ] make the terminal connection more reliable/robust
-- [ ] notebook for the candidate/reviewer to take notes during the assessment
-- [ ] dynamic VM scaling mechanism (based on KubeVirt)
-  - [ ] local setup with KubeVirt for MacOS
-- [ ] SSO authentication
+- [ ] Backend API completion
+  - [ ] API endpoints for all core functionality
+  - [ ] Authentication and authorization middleware
+  - [ ] Integration with database models
+  - [ ] API documentation and OpenAPI specification
+  - [ ] llms.txt documentation for the API
+- [ ] Database schema and migrations
+  - [ ] Organization and user models
+  - [ ] Assessment and template models
+  - [ ] Environment configuration models
+  - [ ] Results and scoring models
+- [ ] Virtual Machine infrastructure
+  - [ ] KubeVirt integration for VM deployment
+    - [ ] Local setup with KubeVirt for MacOS
+  - [ ] Resource allocation and constraints implementation
+  - [ ] Network segmentation and security policies
+  - [ ] on-demand (JIT) provisioning system
+- [ ] Monitoring and observability
+  - [ ] Environment health monitoring
+  - [ ] Performance metrics collection
+  - [ ] Resource utilization tracking
+  - [ ] Alerting for environment issues
+- [ ] Security infrastructure
+  - [ ] SSO authentication integration
+  - [ ] Network policy controls for internet access
+  - [ ] Secure environment isolation
+  - [ ] SSH-based terminal access
+  - [ ] Audit logging for security events
+
+### Environment Management
+
+- [ ] Environment templates system
+  - [ ] Pre-defined environment templates (K8s/Linux/Docker/...)
+  - [ ] Custom environment template creation (from pre-defined templates/from existing custom environments)
+  - [ ] Software installation and configuration
+  - [ ] Environment validation mechanisms
+- [ ] Test environments lifecycle management
+  - [ ] Creating environments from templates
+  - [ ] Environment snapshotting capabilities
+    - [ ] Ability to snapshot the environment on-demand
+    - [ ] Automatic snapshotting after assessment completion
+  - [ ] Environment restoration from snapshots
+    - [ ] Ability to create a new environment from a snapshot
+  - [ ] Automatic cleanup after assessment completion
+  - [ ] Environment persistence configuration for post-test review
+- [ ] Make the terminal connection more reliable/robust
+  - [ ] WebSocket connection management
+  - [ ] Session persistence and recovery
+  - [ ] Terminal resize handling
+  - [ ] Input/output buffering improvements
+
+### Assessment Framework
+
+- [ ] Task template system
+  - [ ] Single/multiple step definition interface
+  - [ ] Validation criteria configuration
+  - [ ] Dependency relationship management
+  - [ ] Cloning and versioning capabilities
+- [ ] Assessment template system
+  - [ ] Combining tasks into assessment flows
+  - [ ] Time limit configuration
+  - [ ] Scoring weight configuration
+  - [ ] Readiness check implementation
+- [ ] Validation and scoring system
+  - [ ] Custom validation script support
+  - [ ] Automatic scoring implementation
+  - [ ] Time-based bonus point allocation
+  - [ ] Score threshold configuration
 
 ### Candidate Experience
 
-- [ ] file-system view that allows the candidate to move around the file-system and modify files - with something like an embedded VSCode
+- [ ] Assessment interface
+  - [ ] Time tracking and progress indicators
+  - [ ] Task instructions and requirements display
+  - [ ] File-system view that allows the candidate to move around the file-system and modify files
+    - [ ] Embedded code editor (like VSCode)
+  - [ ] Browser-based terminal with pre-installed tools
+  - [ ] Notebook for the candidate to take notes during the assessment
+  - [ ] Real-time validation feedback
+  - [ ] Time management and notifications
+  - [ ] Audio reminders for the candidate to stay on track
 
 ### Reviewer Experience
 
-- [ ] "terminal" view that allows the reviewer to see the terminal output of the candidate in real-time
-- [ ] "recording" mechanism for the terminal session (i.e. capture the terminal input & output, and let the reviewer watch it)
-- [ ] file-system view that allows the reviewer to see the file-system of the candidate
+- [ ] Assessment review interface
+  - [ ] Automatic scoring script execution
+  - [ ] "Terminal" view that allows the reviewer to see the terminal output of the candidate in real-time
+  - [ ] "Recording" mechanism for the terminal session
+    - [ ] Capture terminal input & output
+    - [ ] Playback controls for reviewers
+  - [ ] File-system view for reviewing candidate changes
+  - [ ] Command history with timestamps and execution results
+  - [ ] Performance metrics visualization
+  - [ ] Environment snapshot navigation
+  - [ ] Scoring breakdown and explanation
+  - [ ] Reviewer annotation and feedback tools
+  - [ ] Notebook for the reviewer to take notes during review
 
 ### Organization Management
 
-- [ ] CRUD for: assessments, assessment templates, task templates, environment templates, users, roles, organizations, integrations, settings, logs, etc.
-  - [ ] ability to create a new environment template from an existing custom environment (i.e. allow the same functionality as with the base environment templates)
-  - [ ] assessment creation (from assessment template), management, and scheduling
-    - [ ] email notifications to the candidate for the scheduled assessments with the assessment link
-    - [ ] email notifications to the reviewers for the new assessments (if the reviewer is assigned to the assessment)
-  - [ ] ability to create a new assessment template from an existing assessment template
-  - [ ] ability to create a new task template from an existing task template
-- [ ] RBAC
-  - [ ] custom roles
-  - [ ] proper logging and monitoring
-  - [ ] audit logs
-  - [ ] ability to manage users and roles
+- [ ] Multi-tenant architecture
+  - [ ] Organization isolation
+  - [ ] Resource allocation per organization
+  - [ ] Usage tracking and limits
+- [ ] RBAC implementation
+  - [ ] Basic roles (admin, editor, viewer)
+  - [ ] Custom roles and permissions
+  - [ ] Role assignment and management
+  - [ ] Proper standardized logging and monitoring
+  - [ ] Audit logs for access and changes
+  - [ ] Ability to manage users and roles
+- [ ] Content management
+  - [ ] CRUD for: assessments, assessment templates, task templates, environment templates
+  - [ ] CRUD for: users, roles, organizations, integrations, settings, logs
+  - [ ] Assessment creation (from assessment template), management, and scheduling
+    - [ ] Email notifications to candidates for scheduled assessments
+    - [ ] Email notifications to reviewers for new assignments
+  - [ ] Template cloning and versioning
+    - [ ] Ability to create a new assessment template from an existing assessment template
+    - [ ] Ability to create a new task template from an existing task template
+- [ ] Reporting and analytics
+  - [ ] Assessment completion metrics
+  - [ ] Scoring analytics and trends
+  - [ ] Resource usage reporting
+  - [ ] User activity monitoring
+
+### Deployment and Operations
+
+- [ ] CI/CD pipeline setup
+  - [ ] Automated testing
+  - [ ] Deployment workflows
+  - [ ] Version management
+- [ ] Infrastructure as Code
+  - [ ] Terraform configurations for GCP/GKE
+  - [ ] Kubernetes manifests for application components
+  - [ ] KubeVirt configurations for VM management
+- [ ] Documentation
+  - [ ] Installation and deployment guides
+- [ ] Backup and disaster recovery
+  - [ ] Database backup procedures
+  - [ ] Environment snapshot retention policies
+  - [ ] Recovery workflows
