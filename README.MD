@@ -207,18 +207,28 @@ The infrastructure should be deployed in GCP's GKE. The environments users will 
 
 ### Core Infrastructure
 
+- [/] Initial project structure setup
+  - [/] Frontend Next.js application structure
+  - [/] Backend Go application structure
+  - [/] Docker containerization configuration
+  - [ ] CI/CD pipeline integration
 - [ ] Backend API completion
+  - [/] Initial Go module setup with dependencies
+  - [/] Basic HTTP server setup with Chi router
   - [ ] API endpoints for all core functionality
   - [ ] Authentication and authorization middleware
   - [ ] Integration with database models
   - [ ] API documentation and OpenAPI specification
   - [ ] llms.txt documentation for the API
 - [ ] Database schema and migrations
+  - [/] Database connection setup with pgx
+  - [/] Migrations directory structure
   - [ ] Organization and user models
   - [ ] Assessment and template models
   - [ ] Environment configuration models
   - [ ] Results and scoring models
 - [ ] Virtual Machine infrastructure
+  - [/] Initial Kubernetes configuration
   - [ ] KubeVirt integration for VM deployment
     - [ ] Local setup with KubeVirt for MacOS
   - [ ] Resource allocation and constraints implementation
@@ -253,6 +263,7 @@ The infrastructure should be deployed in GCP's GKE. The environments users will 
   - [ ] Automatic cleanup after assessment completion
   - [ ] Environment persistence configuration for post-test review
 - [ ] Make the terminal connection more reliable/robust
+  - [/] Initial WebSocket terminal connection
   - [ ] WebSocket connection management
   - [ ] Session persistence and recovery
   - [ ] Terminal resize handling
@@ -279,10 +290,13 @@ The infrastructure should be deployed in GCP's GKE. The environments users will 
 ### Candidate Experience
 
 - [ ] Assessment interface
+  - [/] Initial UI scaffolding with Next.js and TailwindCSS
+  - [/] Basic UI components with shadcn/ui
   - [ ] Time tracking and progress indicators
   - [ ] Task instructions and requirements display
   - [ ] File-system view that allows the candidate to move around the file-system and modify files
     - [ ] Embedded code editor (like VSCode)
+  - [/] Basic browser-based terminal prototype
   - [ ] Browser-based terminal with pre-installed tools
   - [ ] Notebook for the candidate to take notes during the assessment
   - [ ] Real-time validation feedback
@@ -308,10 +322,12 @@ The infrastructure should be deployed in GCP's GKE. The environments users will 
 ### Organization Management
 
 - [ ] Multi-tenant architecture
+  - [/] Initial database schema design for multi-tenancy
   - [ ] Organization isolation
   - [ ] Resource allocation per organization
   - [ ] Usage tracking and limits
 - [ ] RBAC implementation
+  - [/] Basic RBAC schema design
   - [ ] Basic roles (admin, editor, viewer)
   - [ ] Custom roles and permissions
   - [ ] Role assignment and management
@@ -335,15 +351,21 @@ The infrastructure should be deployed in GCP's GKE. The environments users will 
 
 ### Deployment and Operations
 
+- [/] Initial infrastructure planning
+  - [/] Technology stack selection
+  - [/] Deployment architecture design
 - [ ] CI/CD pipeline setup
   - [ ] Automated testing
   - [ ] Deployment workflows
   - [ ] Version management
 - [ ] Infrastructure as Code
+  - [/] Initial Kubernetes configuration files
   - [ ] Terraform configurations for GCP/GKE
   - [ ] Kubernetes manifests for application components
   - [ ] KubeVirt configurations for VM management
 - [ ] Documentation
+  - [/] Initial README with project overview
+  - [/] Feature descriptions and pricing models
   - [ ] Installation and deployment guides
 - [ ] Backup and disaster recovery
   - [ ] Database backup procedures
