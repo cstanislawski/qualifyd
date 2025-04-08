@@ -1,6 +1,7 @@
 package model
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 )
@@ -25,21 +26,17 @@ type Organization struct {
 	LogoURL            string `json:"logo_url,omitempty"`
 	WebsiteURL         string `json:"website_url,omitempty"`
 	// Subscription fields
-	SubscriptionStartDate time.Time `json:"subscription_start_date"`
-	SubscriptionEndDate   time.Time `json:"subscription_end_date"`
-	PaymentDueDate        time.Time `json:"payment_due_date,omitempty"`
-	LastPaymentDate       time.Time `json:"last_payment_date,omitempty"`
-	PaymentMethod         string    `json:"payment_method,omitempty"`
-	PaymentMethodDetails  string    `json:"payment_method_details,omitempty"`
-	AutoRenew             bool      `json:"auto_renew"`
-	EmailReminders        bool      `json:"email_reminders"`
-	// Legacy fields that will be moved to quota system
-	MaxUsers        int       `json:"max_users"`
-	MaxTemplates    int       `json:"max_templates"`
-	MaxEnvironments int       `json:"max_environments"`
-	MaxRuntime      int       `json:"max_runtime_minutes"` // in minutes
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	SubscriptionStartDate time.Time       `json:"subscription_start_date"`
+	SubscriptionEndDate   time.Time       `json:"subscription_end_date"`
+	PaymentDueDate        time.Time       `json:"payment_due_date,omitempty"`
+	LastPaymentDate       time.Time       `json:"last_payment_date,omitempty"`
+	PaymentMethod         string          `json:"payment_method,omitempty"`
+	PaymentMethodDetails  json.RawMessage `json:"payment_method_details,omitempty"`
+	AutoRenew             bool            `json:"auto_renew"`
+	EmailReminders        bool            `json:"email_reminders"`
+	// Legacy fields removed - now handled by OrganizationQuota
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // NewOrganization creates a new organization with default values
@@ -58,10 +55,6 @@ func NewOrganization(id, name, contactEmail string) *Organization {
 		PaymentDueDate:        thirtyDaysLater,
 		AutoRenew:             true,
 		EmailReminders:        true,
-		MaxUsers:              10,
-		MaxTemplates:          5,
-		MaxEnvironments:       2,
-		MaxRuntime:            120, // 2 hours
 		CreatedAt:             now,
 		UpdatedAt:             now,
 	}
@@ -120,10 +113,6 @@ func (o *Organization) OrganizationProfile() map[string]interface{} {
 		"subscription_status":   o.SubscriptionStatus,
 		"logo_url":              o.LogoURL,
 		"website_url":           o.WebsiteURL,
-		"max_users":             o.MaxUsers,
-		"max_templates":         o.MaxTemplates,
-		"max_environments":      o.MaxEnvironments,
-		"max_runtime":           o.MaxRuntime,
 		"subscription_end_date": o.SubscriptionEndDate,
 		"created_at":            o.CreatedAt,
 	}
@@ -160,20 +149,6 @@ func (o *Organization) Validate() map[string]string {
 		// Valid status
 	default:
 		errors["subscription_status"] = "Invalid subscription status"
-	}
-
-	// Validate limits
-	if o.MaxUsers < 1 {
-		errors["max_users"] = "Maximum users must be at least 1"
-	}
-	if o.MaxTemplates < 1 {
-		errors["max_templates"] = "Maximum templates must be at least 1"
-	}
-	if o.MaxEnvironments < 1 {
-		errors["max_environments"] = "Maximum environments must be at least 1"
-	}
-	if o.MaxRuntime < 15 {
-		errors["max_runtime"] = "Maximum runtime must be at least 15 minutes"
 	}
 
 	return errors

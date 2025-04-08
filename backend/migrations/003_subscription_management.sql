@@ -8,7 +8,12 @@ ADD COLUMN IF NOT EXISTS last_payment_date TIMESTAMP WITH TIME ZONE,
 ADD COLUMN IF NOT EXISTS payment_method VARCHAR(255),
 ADD COLUMN IF NOT EXISTS payment_method_details JSONB,
 ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN DEFAULT TRUE,
-ADD COLUMN IF NOT EXISTS email_reminders BOOLEAN DEFAULT TRUE;
+ADD COLUMN IF NOT EXISTS email_reminders BOOLEAN DEFAULT TRUE,
+-- Remove legacy quota fields
+DROP COLUMN IF EXISTS max_users,
+DROP COLUMN IF EXISTS max_templates,
+DROP COLUMN IF EXISTS max_environments,
+DROP COLUMN IF EXISTS max_runtime;
 
 -- Quota tracking table for organizations
 CREATE TABLE IF NOT EXISTS organization_quotas (
@@ -64,6 +69,9 @@ CREATE TABLE IF NOT EXISTS billing_records (
     billing_period_end TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Add index for billing records by organization ID
+CREATE INDEX IF NOT EXISTS idx_billing_records_org_id ON billing_records(organization_id);
 
 -- Resource usage tracking table
 CREATE TABLE IF NOT EXISTS usage_records (

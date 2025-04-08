@@ -26,9 +26,11 @@ func NewOrganizationRepository(db *database.Database) *OrganizationRepository {
 // GetByID retrieves an organization by ID
 func (r *OrganizationRepository) GetByID(ctx context.Context, id string) (*model.Organization, error) {
 	query := `
-		SELECT id, name, subscription_plan, contact_email, contact_phone, billing_email,
-		       billing_address, logo_url, website_url, max_users, max_templates,
-		       max_environments, max_runtime, created_at, updated_at
+		SELECT id, name, subscription_plan, subscription_status, contact_email, contact_phone, billing_email,
+		       billing_address, logo_url, website_url,
+		       subscription_start_date, subscription_end_date, payment_due_date,
+		       last_payment_date, payment_method, payment_method_details, auto_renew, email_reminders,
+		       created_at, updated_at
 		FROM organizations
 		WHERE id = $1
 	`
@@ -39,16 +41,21 @@ func (r *OrganizationRepository) GetByID(ctx context.Context, id string) (*model
 		&org.ID,
 		&org.Name,
 		&org.SubscriptionPlan,
+		&org.SubscriptionStatus,
 		&org.ContactEmail,
 		&org.ContactPhone,
 		&org.BillingEmail,
 		&org.BillingAddress,
 		&org.LogoURL,
 		&org.WebsiteURL,
-		&org.MaxUsers,
-		&org.MaxTemplates,
-		&org.MaxEnvironments,
-		&org.MaxRuntime,
+		&org.SubscriptionStartDate,
+		&org.SubscriptionEndDate,
+		&org.PaymentDueDate,
+		&org.LastPaymentDate,
+		&org.PaymentMethod,
+		&org.PaymentMethodDetails,
+		&org.AutoRenew,
+		&org.EmailReminders,
 		&org.CreatedAt,
 		&org.UpdatedAt,
 	)
@@ -66,10 +73,12 @@ func (r *OrganizationRepository) GetByID(ctx context.Context, id string) (*model
 // Create creates a new organization
 func (r *OrganizationRepository) Create(ctx context.Context, org *model.Organization) error {
 	query := `
-		INSERT INTO organizations (id, name, subscription_plan, contact_email, contact_phone, billing_email,
-		                         billing_address, logo_url, website_url, max_users, max_templates,
-		                         max_environments, max_runtime, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+		INSERT INTO organizations (id, name, subscription_plan, subscription_status, contact_email, contact_phone, billing_email,
+		                         billing_address, logo_url, website_url,
+		                         subscription_start_date, subscription_end_date, payment_due_date,
+		                         last_payment_date, payment_method, payment_method_details, auto_renew, email_reminders,
+		                         created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
 	`
 
 	// Generate a new UUID if not provided
@@ -90,16 +99,21 @@ func (r *OrganizationRepository) Create(ctx context.Context, org *model.Organiza
 		org.ID,
 		org.Name,
 		org.SubscriptionPlan,
+		org.SubscriptionStatus,
 		org.ContactEmail,
 		org.ContactPhone,
 		org.BillingEmail,
 		org.BillingAddress,
 		org.LogoURL,
 		org.WebsiteURL,
-		org.MaxUsers,
-		org.MaxTemplates,
-		org.MaxEnvironments,
-		org.MaxRuntime,
+		org.SubscriptionStartDate,
+		org.SubscriptionEndDate,
+		org.PaymentDueDate,
+		org.LastPaymentDate,
+		org.PaymentMethod,
+		org.PaymentMethodDetails,
+		org.AutoRenew,
+		org.EmailReminders,
 		org.CreatedAt,
 		org.UpdatedAt,
 	)
@@ -118,11 +132,12 @@ func (r *OrganizationRepository) Create(ctx context.Context, org *model.Organiza
 func (r *OrganizationRepository) Update(ctx context.Context, org *model.Organization) error {
 	query := `
 		UPDATE organizations
-		SET name = $1, subscription_plan = $2, contact_email = $3, contact_phone = $4,
-		    billing_email = $5, billing_address = $6, logo_url = $7, website_url = $8,
-		    max_users = $9, max_templates = $10, max_environments = $11, max_runtime = $12,
-		    updated_at = $13
-		WHERE id = $14
+		SET name = $1, subscription_plan = $2, subscription_status = $3, contact_email = $4, contact_phone = $5,
+		    billing_email = $6, billing_address = $7, logo_url = $8, website_url = $9,
+		    subscription_start_date = $10, subscription_end_date = $11, payment_due_date = $12,
+		    last_payment_date = $13, payment_method = $14, payment_method_details = $15, auto_renew = $16, email_reminders = $17,
+		    updated_at = $18
+		WHERE id = $19
 	`
 
 	// Ensure updated_at is set
@@ -131,16 +146,21 @@ func (r *OrganizationRepository) Update(ctx context.Context, org *model.Organiza
 	_, err := r.db.Exec(ctx, query,
 		org.Name,
 		org.SubscriptionPlan,
+		org.SubscriptionStatus,
 		org.ContactEmail,
 		org.ContactPhone,
 		org.BillingEmail,
 		org.BillingAddress,
 		org.LogoURL,
 		org.WebsiteURL,
-		org.MaxUsers,
-		org.MaxTemplates,
-		org.MaxEnvironments,
-		org.MaxRuntime,
+		org.SubscriptionStartDate,
+		org.SubscriptionEndDate,
+		org.PaymentDueDate,
+		org.LastPaymentDate,
+		org.PaymentMethod,
+		org.PaymentMethodDetails,
+		org.AutoRenew,
+		org.EmailReminders,
 		org.UpdatedAt,
 		org.ID,
 	)
@@ -189,9 +209,11 @@ func (r *OrganizationRepository) Delete(ctx context.Context, id string) error {
 // List retrieves a list of organizations with pagination
 func (r *OrganizationRepository) List(ctx context.Context, limit, offset int) ([]*model.Organization, error) {
 	query := `
-		SELECT id, name, subscription_plan, contact_email, contact_phone, billing_email,
-		       billing_address, logo_url, website_url, max_users, max_templates,
-		       max_environments, max_runtime, created_at, updated_at
+		SELECT id, name, subscription_plan, subscription_status, contact_email, contact_phone, billing_email,
+		       billing_address, logo_url, website_url,
+		       subscription_start_date, subscription_end_date, payment_due_date,
+		       last_payment_date, payment_method, payment_method_details, auto_renew, email_reminders,
+		       created_at, updated_at
 		FROM organizations
 		ORDER BY name ASC
 		LIMIT $1 OFFSET $2
@@ -261,16 +283,21 @@ func (r *OrganizationRepository) scanOrganization(row pgx.Rows) (*model.Organiza
 		&org.ID,
 		&org.Name,
 		&org.SubscriptionPlan,
+		&org.SubscriptionStatus,
 		&org.ContactEmail,
 		&org.ContactPhone,
 		&org.BillingEmail,
 		&org.BillingAddress,
 		&org.LogoURL,
 		&org.WebsiteURL,
-		&org.MaxUsers,
-		&org.MaxTemplates,
-		&org.MaxEnvironments,
-		&org.MaxRuntime,
+		&org.SubscriptionStartDate,
+		&org.SubscriptionEndDate,
+		&org.PaymentDueDate,
+		&org.LastPaymentDate,
+		&org.PaymentMethod,
+		&org.PaymentMethodDetails,
+		&org.AutoRenew,
+		&org.EmailReminders,
 		&org.CreatedAt,
 		&org.UpdatedAt,
 	)

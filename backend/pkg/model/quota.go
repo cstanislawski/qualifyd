@@ -2,6 +2,7 @@ package model
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 )
 
@@ -27,6 +28,15 @@ const (
 const (
 	ResourceTypeAssessmentCreated  = "assessment_created"
 	ResourceTypeEnvironmentMinutes = "environment_minutes"
+)
+
+// Subscription-related errors
+var (
+	ErrSubscriptionInactive      = errors.New("subscription is inactive")
+	ErrSubscriptionExpired       = errors.New("subscription has expired")
+	ErrTrialExpired              = errors.New("trial period has expired")
+	ErrSubscriptionLimitExceeded = errors.New("subscription limit exceeded")
+	ErrQuotaLimitExceeded        = errors.New("organization quota limit exceeded")
 )
 
 // OrganizationQuota represents the usage limits and current usage for an organization
