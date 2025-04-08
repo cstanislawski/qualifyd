@@ -10,7 +10,7 @@ import (
 
 // List of paths to exclude from logging
 var skipLogPaths = map[string]bool{
-	"/health":    true,
+	"/health": true,
 	// "/metrics":   true, # TODO once metrics are implemented
 }
 
