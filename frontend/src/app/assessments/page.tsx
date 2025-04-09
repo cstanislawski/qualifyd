@@ -27,7 +27,7 @@ interface CandidateAssessment {
 }
 
 export default function AssessmentsPage() {
-  const { isLoggedIn, isCompanyUser, isCandidate } = useAuth();
+  const { isLoggedIn, hasAnyCompanyRole, isCandidate } = useAuth();
   const router = useRouter();
   const [companyAssessments, setCompanyAssessments] = useState<CompanyAssessment[]>([]);
   const [candidateAssessments, setCandidateAssessments] = useState<CandidateAssessment[]>([]);
@@ -40,7 +40,7 @@ export default function AssessmentsPage() {
       return;
     }
 
-    if (isCompanyUser()) {
+    if (hasAnyCompanyRole()) {
       // Mock data for company users
       const mockCompanyAssessments: CompanyAssessment[] = [
         {
@@ -117,7 +117,7 @@ export default function AssessmentsPage() {
       ];
       setCandidateAssessments(mockCandidateAssessments);
     }
-  }, [isLoggedIn, isCompanyUser, isCandidate, router]);
+  }, [isLoggedIn, hasAnyCompanyRole, isCandidate, router]);
 
   // Define status priority for sorting company assessments
   const statusPriority: Record<string, number> = {
@@ -144,7 +144,7 @@ export default function AssessmentsPage() {
 
   return (
     <>
-      {isCompanyUser() && (
+      {hasAnyCompanyRole() && (
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-2xl font-bold text-zinc-100">Assessments</h1>

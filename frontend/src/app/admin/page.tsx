@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function AdminDashboard() {
-  const { isLoggedIn, isCompanyUser } = useAuth();
+  const { isLoggedIn, hasAnyCompanyRole } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -16,11 +16,11 @@ export default function AdminDashboard() {
       return;
     }
 
-    if (!isCompanyUser()) {
+    if (!hasAnyCompanyRole()) {
       router.push('/');
       return;
     }
-  }, [isLoggedIn, isCompanyUser, router]);
+  }, [isLoggedIn, hasAnyCompanyRole, router]);
 
   // This would be fetched from an API in a real implementation
   const statistics = {

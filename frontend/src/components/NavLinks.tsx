@@ -6,7 +6,7 @@ import { useAuth } from '@/utils/auth';
 
 export default function NavLinks() {
   const pathname = usePathname();
-  const { isLoggedIn, isCompanyUser, isCandidate } = useAuth();
+  const { isLoggedIn, hasAnyCompanyRole, isCandidate } = useAuth();
 
   // Public links - always visible
   const publicLinks = [
@@ -42,7 +42,7 @@ export default function NavLinks() {
     navLinks = [...navLinks, assessmentLink];
 
     // Add company-specific links for company users
-    if (isCompanyUser()) {
+    if (hasAnyCompanyRole()) {
       navLinks = [...navLinks, ...companyLinks];
     }
   }
