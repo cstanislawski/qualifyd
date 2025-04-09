@@ -23,17 +23,19 @@ const (
 
 // User represents a user in the system
 type User struct {
-	ID             string    `json:"id"`
-	Email          string    `json:"email"`
-	PasswordHash   string    `json:"-"`
-	FirstName      string    `json:"first_name"`
-	LastName       string    `json:"last_name"`
-	Role           string    `json:"role"`
-	Status         string    `json:"status"`
-	OrganizationID string    `json:"organization_id,omitempty"`
-	LastLoginAt    time.Time `json:"last_login_at,omitempty"`
-	CreatedAt      time.Time `json:"created_at"`
-	UpdatedAt      time.Time `json:"updated_at"`
+	ID                  string     `json:"id"`
+	Email               string     `json:"email"`
+	PasswordHash        string     `json:"-"`
+	FirstName           string     `json:"first_name"`
+	LastName            string     `json:"last_name"`
+	Role                string     `json:"role"`
+	Status              string     `json:"status"`
+	OrganizationID      string     `json:"organization_id,omitempty"`
+	LastLoginAt         time.Time  `json:"last_login_at,omitempty"`
+	CreatedAt           time.Time  `json:"created_at"`
+	UpdatedAt           time.Time  `json:"updated_at"`
+	InvitationToken     *string    `json:"-"` // Pointer to handle nullable
+	InvitationExpiresAt *time.Time `json:"-"` // Pointer to handle nullable
 }
 
 // NewUser creates a new user with the provided information

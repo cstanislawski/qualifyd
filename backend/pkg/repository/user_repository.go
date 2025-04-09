@@ -27,7 +27,8 @@ func NewUserRepository(db *database.Database) *UserRepository {
 func (r *UserRepository) GetByID(ctx context.Context, id string) (*model.User, error) {
 	query := `
 		SELECT id, email, password_hash, first_name, last_name, role, status,
-		       organization_id, last_login_at, created_at, updated_at
+		       organization_id, last_login_at, created_at, updated_at,
+		       invitation_token, invitation_expires_at
 		FROM users
 		WHERE id = $1
 	`
@@ -47,6 +48,8 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*model.User, e
 		&lastLoginAt,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.InvitationToken,
+		&user.InvitationExpiresAt,
 	)
 
 	if err != nil {
@@ -68,7 +71,8 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*model.User, e
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.User, error) {
 	query := `
 		SELECT id, email, password_hash, first_name, last_name, role, status,
-		       organization_id, last_login_at, created_at, updated_at
+		       organization_id, last_login_at, created_at, updated_at,
+		       invitation_token, invitation_expires_at
 		FROM users
 		WHERE email = $1
 	`
@@ -88,6 +92,8 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.U
 		&lastLoginAt,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.InvitationToken,
+		&user.InvitationExpiresAt,
 	)
 
 	if err != nil {
@@ -108,8 +114,11 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*model.U
 // Create creates a new user
 func (r *UserRepository) Create(ctx context.Context, user *model.User) error {
 	query := `
-		INSERT INTO users (id, email, password_hash, first_name, last_name, role, status, organization_id, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		INSERT INTO users (
+			id, email, password_hash, first_name, last_name, role, status, organization_id,
+			created_at, updated_at, invitation_token, invitation_expires_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 	`
 
 	// Generate a new UUID if not provided
@@ -137,6 +146,8 @@ func (r *UserRepository) Create(ctx context.Context, user *model.User) error {
 		user.OrganizationID,
 		user.CreatedAt,
 		user.UpdatedAt,
+		user.InvitationToken,
+		user.InvitationExpiresAt,
 	)
 
 	if err != nil {
@@ -318,6 +329,8 @@ func (r *UserRepository) scanUser(row pgx.Rows) (*model.User, error) {
 		&lastLoginAt,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.InvitationToken,
+		&user.InvitationExpiresAt,
 	)
 
 	if err != nil {
@@ -350,4 +363,70 @@ func (r *UserRepository) GetPaginatedUsers(ctx context.Context, params database.
 	}
 
 	return database.NewPaginatedResponse(users, params, count), nil
+}
+
+// GetByInvitationToken retrieves a user by their invitation token
+func (r *UserRepository) GetByInvitationToken(ctx context.Context, token string) (*model.User, error) {
+	query := `
+		SELECT id, email, password_hash, first_name, last_name, role, status,
+		       organization_id, last_login_at, created_at, updated_at,
+		       invitation_token, invitation_expires_at
+		FROM users
+		WHERE invitation_token = $1
+	`
+
+	var user model.User
+	var lastLoginAt *time.Time
+
+	err := r.db.QueryRow(ctx, query, token).Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.FirstName,
+		&user.LastName,
+		&user.Role,
+		&user.Status,
+		&user.OrganizationID,
+		&lastLoginAt,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.InvitationToken,
+		&user.InvitationExpiresAt,
+	)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, database.ErrRecordNotFound
+		}
+		return nil, fmt.Errorf("failed to get user by invitation token: %w", err)
+	}
+
+	// Set last login time if not nil
+	if lastLoginAt != nil {
+		user.LastLoginAt = *lastLoginAt
+	}
+
+	return &user, nil
+}
+
+// ActivateUser updates a user's status to active and clears invitation token
+func (r *UserRepository) ActivateUser(ctx context.Context, userID string) error {
+	query := `
+		UPDATE users
+		SET status = $1, invitation_token = NULL, invitation_expires_at = NULL, updated_at = $2
+		WHERE id = $3
+	`
+
+	now := time.Now().UTC()
+
+	_, err := r.db.Exec(ctx, query, model.StatusActive, now, userID)
+
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return database.ErrRecordNotFound
+		}
+		return fmt.Errorf("failed to activate user: %w", err)
+	}
+
+	return nil
 }
