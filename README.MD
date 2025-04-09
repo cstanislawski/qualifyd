@@ -70,7 +70,12 @@ Which could be used to hire:
   - Performance metrics including resource utilization and completion time
 - Organization management:
   - Secure organization profile with multi-tenant isolation
-  - Role-based access control with initial roles (admin, editor, viewer)
+  - Role-based access control with specialized roles:
+    - Admin: Full control over organization management, users, roles, billing and quotas
+    - Template Editor: Creates and manages assessment content (environments, tasks, templates)
+    - Recruiter: Manages candidate pool and schedules assessments
+    - Reviewer: Evaluates candidate performance and provides feedback
+    - Candidate: Takes assessments with restricted view
   - Usage tracking and resource allocation monitoring
   - Basic reporting and assessment analytics
 
@@ -328,7 +333,7 @@ The infrastructure should be deployed in GCP's GKE. The environments users will 
   - [ ] Usage tracking and limits
 - [ ] RBAC implementation
   - [/] Basic RBAC schema design
-  - [ ] Basic roles (admin, editor, viewer)
+  - [/] Specialized roles (Admin, Template Editor, Recruiter, Reviewer, Candidate)
   - [ ] Custom roles and permissions
   - [ ] Role assignment and management
   - [ ] Proper standardized logging and monitoring

@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 // Define user roles
-export type UserRole = 'candidate' | 'admin' | 'editor' | 'viewer' | null;
+export type UserRole = 'candidate' | 'admin' | 'template-editor' | 'recruiter' | 'reviewer' | null;
 
 // User information interface
 export interface User {
@@ -21,9 +21,12 @@ interface AuthContextType {
   isLoggedIn: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  isCompanyUser: () => boolean;
+  hasAnyCompanyRole: () => boolean;
   isCandidate: () => boolean;
   isAdmin: () => boolean;
+  isTemplateEditor: () => boolean;
+  isRecruiter: () => boolean;
+  isReviewer: () => boolean;
 }
 
 // Create auth context with default values
@@ -33,9 +36,12 @@ const AuthContext = createContext<AuthContextType>({
   isLoggedIn: false,
   login: async () => {},
   logout: () => {},
-  isCompanyUser: () => false,
+  hasAnyCompanyRole: () => false,
   isCandidate: () => false,
   isAdmin: () => false,
+  isTemplateEditor: () => false,
+  isRecruiter: () => false,
+  isReviewer: () => false,
 });
 
 // Auth provider component
@@ -50,10 +56,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Development mode credentials
   const DEV_CREDENTIALS = {
-    'candidate@example.com': { password: 'candidate', role: 'candidate' as const, name: 'Candidate', id: '1' },
-    'admin@example.com': { password: 'admin', role: 'admin' as const, name: 'Admin', id: '2' },
-    'editor@example.com': { password: 'editor', role: 'editor' as const, name: 'Editor', id: '3' },
-    'viewer@example.com': { password: 'viewer', role: 'viewer' as const, name: 'Viewer', id: '4' },
+    'candidate@example.com': { password: 'candidate', role: 'candidate' as const, name: 'Candidate User', id: '1' },
+    'admin@example.com': { password: 'admin', role: 'admin' as const, name: 'Admin User', id: '2' },
+    'template-editor@example.com': { password: 'editor', role: 'template-editor' as const, name: 'Template Editor User', id: '3' },
+    'recruiter@example.com': { password: 'recruiter', role: 'recruiter' as const, name: 'Recruiter User', id: '4' },
+    'reviewer@example.com': { password: 'reviewer', role: 'reviewer' as const, name: 'Reviewer User', id: '5' },
   };
 
   // Check if user is logged in on component mount
@@ -118,8 +125,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Helper functions to check user roles
-  const isCompanyUser = () => {
-    return user?.role === 'admin' || user?.role === 'editor' || user?.role === 'viewer';
+  const hasAnyCompanyRole = () => {
+    // Company roles include Admin, Template Editor, Recruiter, Reviewer
+    return user?.role === 'admin' || user?.role === 'template-editor' || user?.role === 'recruiter' || user?.role === 'reviewer';
   };
 
   const isCandidate = () => {
@@ -130,6 +138,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return user?.role === 'admin';
   };
 
+  const isTemplateEditor = () => {
+    return user?.role === 'template-editor';
+  };
+
+  const isRecruiter = () => {
+    return user?.role === 'recruiter';
+  };
+
+  const isReviewer = () => {
+    return user?.role === 'reviewer';
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -138,9 +158,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoggedIn: !!user,
         login,
         logout,
-        isCompanyUser,
+        hasAnyCompanyRole,
         isCandidate,
-        isAdmin
+        isAdmin,
+        isTemplateEditor,
+        isRecruiter,
+        isReviewer,
       }}
     >
       {children}

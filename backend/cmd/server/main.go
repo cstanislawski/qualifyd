@@ -79,22 +79,22 @@ func main() {
 		return
 	}
 
-	// Get database connection pool for repositories
-	dbPool := db.Pool()
-
 	// Initialize repositories
 	userRepo := repository.NewUserRepository(db)
 	orgRepo := repository.NewOrganizationRepository(db)
-	taskRepo := repository.NewTaskRepository(dbPool)
-	environmentRepo := repository.NewEnvironmentRepository(dbPool)
-	assessmentRepo := repository.NewAssessmentRepository(dbPool)
+	taskRepo := repository.NewTaskRepository(db.Pool())
+	envRepo := repository.NewEnvironmentRepository(db.Pool())
+	assessmentRepo := repository.NewAssessmentRepository(db.Pool())
 
 	// Initialize authentication service
 	authService := auth.New(&cfg.JWT)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userRepo, orgRepo, authService, log)
-	assessmentHandler := handler.NewAssessmentHandler(assessmentRepo, taskRepo, environmentRepo, log)
+	taskHandler := handler.NewTaskHandler(taskRepo, log)
+	envHandler := handler.NewEnvironmentHandler(envRepo, log)
+	assessmentHandler := handler.NewAssessmentHandler(assessmentRepo, taskRepo, envRepo, log)
+	assessmentTemplateHandler := handler.NewAssessmentTemplateHandler(assessmentRepo, envRepo, taskRepo, log)
 
 	// Initialize websocket hub
 	terminalHub := ws.NewTerminalHub()
@@ -128,75 +128,77 @@ func main() {
 		r.Group(func(r chi.Router) {
 			r.Use(localmiddleware.AuthMiddleware(authService))
 
-			// Admin API routes
-			r.Route("/admin", func(r chi.Router) {
+			// Organization Management routes (Admin only)
+			r.Route("/admin/organizations", func(r chi.Router) {
 				r.Use(localmiddleware.RequireRole(model.RoleAdmin))
+				// TODO: Add endpoints for managing organizations, users, roles, billing
+			})
 
-				// Task templates
-				r.Route("/task-templates", func(r chi.Router) {
-					r.Get("/", getTaskTemplatesHandler)
-					r.Post("/", createTaskTemplateHandler)
-					r.Get("/{id}", getTaskTemplateHandler)
-					r.Put("/{id}", updateTaskTemplateHandler)
-					r.Delete("/{id}", deleteTaskTemplateHandler)
+			// Template Management routes (Template Editor & Admin)
+			r.Route("/templates", func(r chi.Router) {
+				r.Use(localmiddleware.RequireRole(model.RoleAdmin, model.RoleTemplateEditor))
+
+				// Environment Template endpoints
+				r.Route("/environment", func(r chi.Router) {
+					// Assuming Org ID might be needed, adjust if context provides it
+					// r.Get("/org/{orgId}", envHandler.ListOrganizationEnvironmentTemplates)
+					r.Post("/", envHandler.CreateEnvironmentTemplate)
+					r.Get("/{id}", envHandler.GetEnvironmentTemplate)
+					r.Put("/{id}", envHandler.UpdateEnvironmentTemplate)
+					r.Delete("/{id}", envHandler.DeleteEnvironmentTemplate)
 				})
 
-				// Environment templates
-				r.Route("/environment-templates", func(r chi.Router) {
-					r.Get("/", getEnvironmentTemplatesHandler)
-					r.Post("/", createEnvironmentTemplateHandler)
-					r.Get("/{id}", getEnvironmentTemplateHandler)
-					r.Put("/{id}", updateEnvironmentTemplateHandler)
-					r.Delete("/{id}", deleteEnvironmentTemplateHandler)
+				// Task Template endpoints
+				r.Route("/task", func(r chi.Router) {
+					// Assuming Org ID might be needed
+					// r.Get("/org/{orgId}", taskHandler.ListOrganizationTaskTemplates)
+					r.Post("/", taskHandler.CreateTaskTemplate)
+					r.Get("/{id}", taskHandler.GetTaskTemplate)
+					r.Put("/{id}", taskHandler.UpdateTaskTemplate)
+					r.Delete("/{id}", taskHandler.DeleteTaskTemplate)
 				})
 
-				// Assessment templates
-				r.Route("/assessment-templates", func(r chi.Router) {
-					r.Get("/", getAssessmentTemplatesHandler)
-					r.Post("/", createAssessmentTemplateHandler)
-					r.Get("/{id}", getAssessmentTemplateHandler)
-					r.Put("/{id}", updateAssessmentTemplateHandler)
-					r.Delete("/{id}", deleteAssessmentTemplateHandler)
-				})
-
-				// Organization assessments
-				r.Route("/org/{orgId}/assessments", func(r chi.Router) {
-					r.Get("/active", assessmentHandler.GetActiveOrganizationAssessments)
+				// Assessment Template endpoints
+				r.Route("/assessment", func(r chi.Router) {
+					// Assuming Org ID might be needed
+					// r.Get("/org/{orgId}", assessmentTemplateHandler.ListOrganizationAssessmentTemplates)
+					r.Post("/", assessmentTemplateHandler.CreateAssessmentTemplate)
+					r.Get("/{id}", assessmentTemplateHandler.GetAssessmentTemplate)
+					r.Put("/{id}", assessmentTemplateHandler.UpdateAssessmentTemplate)
+					r.Delete("/{id}", assessmentTemplateHandler.DeleteAssessmentTemplate)
 				})
 			})
 
-			// Recruiter API routes
-			r.Route("/recruiter", func(r chi.Router) {
-				r.Use(localmiddleware.RequireRole(model.RoleRecruiter, model.RoleAdmin))
+			// Assessment Lifecycle routes (Recruiter & Admin)
+			r.Route("/assessments", func(r chi.Router) {
+				r.Use(localmiddleware.RequireRole(model.RoleAdmin, model.RoleRecruiter))
 
-				// Assessment management
-				r.Route("/assessments", func(r chi.Router) {
-					r.Post("/", assessmentHandler.CreateAssessment)
-					r.Get("/{id}", assessmentHandler.GetAssessment)
-				})
+				// Org-level view (for recruiter/admin)
+				r.Get("/organization/{orgId}", assessmentHandler.GetActiveOrganizationAssessments) // Consider how orgId is passed
+				// Create assessment instance
+				r.Post("/", assessmentHandler.CreateAssessment)
+				// Get assessment (can be used by Recruiter, Reviewer, Admin)
+				// This route might need more granular access or be duplicated under Reviewer routes
+				r.Get("/{id}", assessmentHandler.GetAssessment)
 			})
 
-			// Candidate API routes
-			r.Route("/candidate", func(r chi.Router) {
+			// Assessment Taking routes (Candidate)
+			r.Route("/candidate/assessments", func(r chi.Router) {
 				r.Use(localmiddleware.RequireRole(model.RoleCandidate))
 
-				// Assessments
-				r.Route("/assessments", func(r chi.Router) {
-					r.Get("/", assessmentHandler.GetCandidateAssessments)
-					r.Get("/{id}", assessmentHandler.GetAssessment)
-					r.Post("/{id}/start", assessmentHandler.StartAssessment)
-					r.Post("/{id}/complete", assessmentHandler.CompleteAssessment)
-				})
+				r.Get("/", assessmentHandler.GetCandidateAssessments)
+				r.Get("/{id}", assessmentHandler.GetAssessment) // Candidate needs to view their specific assessment
+				r.Post("/{id}/start", assessmentHandler.StartAssessment)
+				r.Post("/{id}/complete", assessmentHandler.CompleteAssessment)
+				// WebSocket access should also be implicitly tied to the candidate's assigned assessment
 			})
 
-			// Reviewer API routes
-			r.Route("/reviewer", func(r chi.Router) {
-				r.Use(localmiddleware.RequireRole(model.RoleReviewer, model.RoleAdmin))
+			// Assessment Review routes (Reviewer & Admin)
+			r.Route("/review/assessments", func(r chi.Router) {
+				r.Use(localmiddleware.RequireRole(model.RoleAdmin, model.RoleReviewer))
 
-				// Assessment review
-				r.Route("/assessments", func(r chi.Router) {
-					r.Get("/{id}", assessmentHandler.GetAssessment)
-				})
+				r.Get("/{id}", assessmentHandler.GetAssessment) // Get full details for review
+				// TODO: Add endpoints for getting command history, snapshots, adding review comments
 			})
 		})
 	})

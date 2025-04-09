@@ -321,3 +321,203 @@ func (r *AssessmentRepository) CreateAssessmentTasks(ctx context.Context, assess
 
 	return nil
 }
+
+// CreateTemplate inserts a new assessment template
+func (r *AssessmentRepository) CreateTemplate(ctx context.Context, template *model.AssessmentTemplate) error {
+	query := `
+		INSERT INTO assessment_templates (
+			organization_id, name, description, environment_template_id,
+			total_time_limit, passing_score, internet_access, created_by, created_at, updated_at
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+		RETURNING id
+	`
+
+	now := time.Now().UTC()
+	template.CreatedAt = now
+	template.UpdatedAt = now
+
+	return r.db.QueryRow(ctx, query,
+		template.OrganizationID, template.Name, template.Description, template.EnvironmentTemplateID,
+		template.TotalTimeLimit, template.PassingScore, template.InternetAccess, template.CreatedBy,
+		template.CreatedAt, template.UpdatedAt,
+	).Scan(&template.ID)
+}
+
+// AddTaskToTemplate adds a task to an assessment template
+func (r *AssessmentRepository) AddTaskToTemplate(ctx context.Context, templateID, taskID string, orderIndex int, weight float64) error {
+	query := `
+		INSERT INTO assessment_template_tasks (
+			assessment_template_id, task_template_id, order_index, weight
+		)
+		VALUES ($1, $2, $3, $4)
+	`
+
+	_, err := r.db.Exec(ctx, query, templateID, taskID, orderIndex, weight)
+	return err
+}
+
+// GetTemplateByID retrieves an assessment template by ID
+func (r *AssessmentRepository) GetTemplateByID(ctx context.Context, id string) (*model.AssessmentTemplate, error) {
+	query := `
+		SELECT
+			id, organization_id, name, description, environment_template_id,
+			total_time_limit, passing_score, internet_access, created_by, created_at, updated_at
+		FROM assessment_templates
+		WHERE id = $1
+	`
+
+	template := &model.AssessmentTemplate{}
+	err := r.db.QueryRow(ctx, query, id).Scan(
+		&template.ID, &template.OrganizationID, &template.Name, &template.Description, &template.EnvironmentTemplateID,
+		&template.TotalTimeLimit, &template.PassingScore, &template.InternetAccess, &template.CreatedBy, &template.CreatedAt, &template.UpdatedAt,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, fmt.Errorf("assessment template not found: %s", id)
+		}
+		return nil, err
+	}
+
+	// Get the task weights
+	weightsQuery := `
+		SELECT task_template_id, weight
+		FROM assessment_template_tasks
+		WHERE assessment_template_id = $1
+	`
+
+	weightsRows, err := r.db.Query(ctx, weightsQuery, template.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get task weights: %w", err)
+	}
+	defer weightsRows.Close()
+
+	template.TaskWeights = make(map[string]float64)
+	for weightsRows.Next() {
+		var taskID string
+		var weight float64
+		if err := weightsRows.Scan(&taskID, &weight); err != nil {
+			return nil, fmt.Errorf("failed to scan task weight: %w", err)
+		}
+		template.TaskWeights[taskID] = weight
+	}
+
+	return template, nil
+}
+
+// GetTemplateTasks retrieves all tasks for an assessment template
+func (r *AssessmentRepository) GetTemplateTasks(ctx context.Context, templateID string) ([]*model.TaskTemplate, error) {
+	query := `
+		SELECT
+			tt.id, tt.organization_id, tt.name, tt.description, tt.instructions,
+			tt.time_limit, tt.points, tt.validation_script, tt.readiness_script,
+			tt.environment_setup_script, tt.created_by, tt.created_at, tt.updated_at
+		FROM task_templates tt
+		JOIN assessment_template_tasks att ON tt.id = att.task_template_id
+		WHERE att.assessment_template_id = $1
+		ORDER BY att.order_index
+	`
+
+	rows, err := r.db.Query(ctx, query, templateID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tasks := []*model.TaskTemplate{}
+	for rows.Next() {
+		task := &model.TaskTemplate{}
+		err := rows.Scan(
+			&task.ID, &task.OrganizationID, &task.Name, &task.Description, &task.Instructions,
+			&task.TimeLimit, &task.Points, &task.ValidationScript, &task.ReadinessScript,
+			&task.EnvironmentSetupScript, &task.CreatedBy, &task.CreatedAt, &task.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		tasks = append(tasks, task)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return tasks, nil
+}
+
+// UpdateTemplate updates an existing assessment template
+func (r *AssessmentRepository) UpdateTemplate(ctx context.Context, template *model.AssessmentTemplate) error {
+	query := `
+		UPDATE assessment_templates
+		SET
+			name = $1,
+			description = $2,
+			environment_template_id = $3,
+			total_time_limit = $4,
+			passing_score = $5,
+			internet_access = $6,
+			updated_at = $7
+		WHERE id = $8
+	`
+
+	template.UpdatedAt = time.Now().UTC()
+
+	_, err := r.db.Exec(ctx, query,
+		template.Name, template.Description, template.EnvironmentTemplateID,
+		template.TotalTimeLimit, template.PassingScore, template.InternetAccess,
+		template.UpdatedAt, template.ID,
+	)
+	return err
+}
+
+// DeleteTemplate deletes an assessment template
+func (r *AssessmentRepository) DeleteTemplate(ctx context.Context, id string) error {
+	// Delete the tasks association first
+	taskQuery := `DELETE FROM assessment_template_tasks WHERE assessment_template_id = $1`
+	_, err := r.db.Exec(ctx, taskQuery, id)
+	if err != nil {
+		return err
+	}
+
+	// Then delete the template
+	query := `DELETE FROM assessment_templates WHERE id = $1`
+	_, err = r.db.Exec(ctx, query, id)
+	return err
+}
+
+// ListTemplatesByOrganization lists all assessment templates for an organization
+func (r *AssessmentRepository) ListTemplatesByOrganization(ctx context.Context, organizationID string) ([]*model.AssessmentTemplate, error) {
+	query := `
+		SELECT
+			id, organization_id, name, description, environment_template_id,
+			total_time_limit, passing_score, internet_access, created_by, created_at, updated_at
+		FROM assessment_templates
+		WHERE organization_id = $1
+		ORDER BY name
+	`
+
+	rows, err := r.db.Query(ctx, query, organizationID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	templates := []*model.AssessmentTemplate{}
+	for rows.Next() {
+		template := &model.AssessmentTemplate{}
+		err := rows.Scan(
+			&template.ID, &template.OrganizationID, &template.Name, &template.Description, &template.EnvironmentTemplateID,
+			&template.TotalTimeLimit, &template.PassingScore, &template.InternetAccess, &template.CreatedBy, &template.CreatedAt, &template.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		templates = append(templates, template)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return templates, nil
+}

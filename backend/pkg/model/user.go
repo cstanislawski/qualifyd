@@ -7,10 +7,11 @@ import (
 
 // User roles
 const (
-	RoleAdmin     = "admin"
-	RoleRecruiter = "recruiter"
-	RoleCandidate = "candidate"
-	RoleReviewer  = "reviewer"
+	RoleAdmin          = "admin"
+	RoleTemplateEditor = "template_editor"
+	RoleRecruiter      = "recruiter"
+	RoleCandidate      = "candidate"
+	RoleReviewer       = "reviewer"
 )
 
 // User status
@@ -59,6 +60,11 @@ func (u *User) FullName() string {
 // IsAdmin returns true if the user has admin role
 func (u *User) IsAdmin() bool {
 	return u.Role == RoleAdmin
+}
+
+// IsTemplateEditor returns true if the user has template editor role
+func (u *User) IsTemplateEditor() bool {
+	return u.Role == RoleTemplateEditor
 }
 
 // IsRecruiter returns true if the user has recruiter role
@@ -128,7 +134,7 @@ func (u *User) Validate() map[string]string {
 
 	// Role validation
 	switch u.Role {
-	case RoleAdmin, RoleRecruiter, RoleCandidate, RoleReviewer:
+	case RoleAdmin, RoleTemplateEditor, RoleRecruiter, RoleCandidate, RoleReviewer:
 		// Valid role
 	default:
 		errors["role"] = "Invalid role"

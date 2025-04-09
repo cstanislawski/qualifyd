@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 
 export default function TeamManagement() {
-  const { isLoggedIn, isCompanyUser } = useAuth();
+  const { isLoggedIn, hasAnyCompanyRole } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -16,11 +16,11 @@ export default function TeamManagement() {
       return;
     }
 
-    if (!isCompanyUser()) {
+    if (!hasAnyCompanyRole()) {
       router.push('/');
       return;
     }
-  }, [isLoggedIn, isCompanyUser, router]);
+  }, [isLoggedIn, hasAnyCompanyRole, router]);
 
   // Team members - would be fetched from an API
   const teamMembers = [
@@ -36,7 +36,7 @@ export default function TeamManagement() {
       id: '2',
       name: 'Sarah Chen',
       email: 'sarah@example.com',
-      role: 'Editor',
+      role: 'Template Editor',
       lastActive: '1 day ago',
       avatar: null
     },
@@ -44,7 +44,7 @@ export default function TeamManagement() {
       id: '3',
       name: 'Marcus Wilson',
       email: 'marcus@example.com',
-      role: 'Viewer',
+      role: 'Recruiter',
       lastActive: '3 days ago',
       avatar: null
     },
@@ -52,7 +52,7 @@ export default function TeamManagement() {
       id: '4',
       name: 'Priya Patel',
       email: 'priya@example.com',
-      role: 'Editor',
+      role: 'Reviewer',
       lastActive: '5 hours ago',
       avatar: null
     }

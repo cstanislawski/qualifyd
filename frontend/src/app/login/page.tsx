@@ -130,8 +130,9 @@ export default function Login() {
             <ul className="mt-2 text-xs text-zinc-400 list-disc pl-5">
               <li><span className="text-blue-400">candidate@example.com</span> / candidate</li>
               <li><span className="text-blue-400">admin@example.com</span> / admin</li>
-              <li><span className="text-blue-400">editor@example.com</span> / editor</li>
-              <li><span className="text-blue-400">viewer@example.com</span> / viewer</li>
+              <li><span className="text-blue-400">template-editor@example.com</span> / editor</li>
+              <li><span className="text-blue-400">recruiter@example.com</span> / recruiter</li>
+              <li><span className="text-blue-400">reviewer@example.com</span> / reviewer</li>
             </ul>
           </div>
         )}
