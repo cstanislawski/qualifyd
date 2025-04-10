@@ -430,3 +430,25 @@ func (r *UserRepository) ActivateUser(ctx context.Context, userID string) error 
 
 	return nil
 }
+
+// SetPassword updates only the password hash for a given user ID
+func (r *UserRepository) SetPassword(ctx context.Context, userID string, passwordHash string) error {
+	query := `
+		UPDATE users
+		SET password_hash = $1, updated_at = $2
+		WHERE id = $3
+	`
+
+	now := time.Now().UTC()
+
+	result, err := r.db.Exec(ctx, query, passwordHash, now, userID)
+	if err != nil {
+		return fmt.Errorf("failed to update password: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return database.ErrRecordNotFound // Use the correct error constant
+	}
+
+	return nil
+}

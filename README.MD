@@ -220,11 +220,14 @@ The infrastructure should be deployed in GCP's GKE. The environments users will 
 - [ ] Backend API completion
   - [/] Initial Go module setup with dependencies
   - [/] Basic HTTP server setup with Chi router
+  - [/] Initial User/Org management, Auth, and Invitation Flow
+    - Initial Setup: `POST /api/v1/setup/initialize` creates the first organization and admin user (password provided in request).
+    - Admin Invites User: `POST /api/v1/admin/users` allows an admin to invite a user (no password set).
+    - User Accepts Invite: `POST /api/v1/auth/accept-invitation` allows invited user to set their password using a token (token delivery TBD via email).
   - [ ] API endpoints for all core functionality
-  - [ ] Authentication and authorization middleware
+  - [/] Basic authentication and authorization middleware
   - [ ] Integration with database models
   - [ ] API documentation and OpenAPI specification
-  - [ ] llms.txt documentation for the API
 - [ ] Database schema and migrations
   - [/] Database connection setup with pgx
   - [/] Migrations directory structure

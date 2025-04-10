@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/cstanislawski/qualifyd/pkg/auth"
+	"github.com/cstanislawski/qualifyd/pkg/database"
 	"github.com/cstanislawski/qualifyd/pkg/logger"
 	"github.com/cstanislawski/qualifyd/pkg/model"
 	"github.com/cstanislawski/qualifyd/pkg/repository"
@@ -40,6 +42,12 @@ type AuthResponse struct {
 type ErrorResponse struct {
 	Error   string `json:"error"`
 	Message string `json:"message,omitempty"`
+}
+
+// AcceptInvitationRequest represents the payload for accepting an invitation
+type AcceptInvitationRequest struct {
+	InvitationToken string `json:"invitation_token"`
+	Password        string `json:"password"`
 }
 
 // AuthHandler handles authentication requests
@@ -298,6 +306,106 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 	respondWithJSON(w, http.StatusOK, map[string]interface{}{
 		"access_token": accessToken,
 		"user":         user,
+	})
+}
+
+// HandleAcceptInvitation handles the user accepting an invitation and setting their password
+func (h *AuthHandler) HandleAcceptInvitation(w http.ResponseWriter, r *http.Request) {
+	var req AcceptInvitationRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		h.logger.Error("Failed to decode accept invitation request", err, nil)
+		respondWithError(w, http.StatusBadRequest, "Invalid request payload", err.Error())
+		return
+	}
+
+	// Validate required fields
+	if req.InvitationToken == "" || req.Password == "" {
+		respondWithError(w, http.StatusBadRequest, "Invitation token and password are required", "")
+		return
+	}
+
+	// Get user by invitation token
+	user, err := h.userRepo.GetByInvitationToken(r.Context(), req.InvitationToken)
+	if err != nil {
+		if errors.Is(err, database.ErrRecordNotFound) {
+			respondWithError(w, http.StatusNotFound, "Invalid or expired invitation token", "")
+			return
+		}
+		h.logger.Error("Failed to get user by invitation token", err, map[string]interface{}{
+			"token": req.InvitationToken,
+		})
+		respondWithError(w, http.StatusInternalServerError, "Failed to process invitation", "")
+		return
+	}
+
+	// Check user status
+	if user.Status != model.StatusPending {
+		respondWithError(w, http.StatusConflict, "Invitation already used or user is not pending", "")
+		return
+	}
+
+	// Check if token is expired
+	if user.InvitationExpiresAt == nil || time.Now().UTC().After(*user.InvitationExpiresAt) {
+		respondWithError(w, http.StatusBadRequest, "Invitation token has expired", "")
+		return
+	}
+
+	// Hash the new password
+	hashedPassword, err := auth.HashPassword(req.Password)
+	if err != nil {
+		h.logger.Error("Failed to hash password during invitation acceptance", err, nil)
+		respondWithError(w, http.StatusInternalServerError, "Failed to set password", "")
+		return
+	}
+
+	// Set the user's password
+	if err := h.userRepo.SetPassword(r.Context(), user.ID, hashedPassword); err != nil {
+		h.logger.Error("Failed to set password during invitation acceptance", err, map[string]interface{}{
+			"user_id": user.ID,
+		})
+		respondWithError(w, http.StatusInternalServerError, "Failed to set password", "")
+		return
+	}
+
+	// Activate the user (sets status to active, clears token)
+	if err := h.userRepo.ActivateUser(r.Context(), user.ID); err != nil {
+		h.logger.Error("Failed to activate user during invitation acceptance", err, map[string]interface{}{
+			"user_id": user.ID,
+		})
+		respondWithError(w, http.StatusInternalServerError, "Failed to activate user", "")
+		return
+	}
+
+	// Fetch the updated user record (now active)
+	activeUser, err := h.userRepo.GetByID(r.Context(), user.ID)
+	if err != nil {
+		// Log the error but proceed, as activation likely succeeded
+		h.logger.Error("Failed to fetch user details after activation", err, map[string]interface{}{"user_id": user.ID})
+		// Use the user object we have, but ensure status is active
+		activeUser = user
+		activeUser.Status = model.StatusActive
+	}
+
+	// Generate JWT tokens for immediate login
+	accessToken, refreshToken, err := h.auth.GenerateTokens(activeUser)
+	if err != nil {
+		h.logger.Error("Failed to generate tokens after invitation acceptance", err, map[string]interface{}{
+			"user_id": activeUser.ID,
+		})
+		respondWithError(w, http.StatusInternalServerError, "Failed to generate authentication tokens", "")
+		return
+	}
+
+	// Sanitize user data before sending response
+	activeUser.PasswordHash = ""
+	activeUser.InvitationToken = nil
+	activeUser.InvitationExpiresAt = nil
+
+	// Send response
+	respondWithJSON(w, http.StatusOK, AuthResponse{
+		AccessToken:  accessToken,
+		RefreshToken: refreshToken,
+		User:         *activeUser,
 	})
 }
 

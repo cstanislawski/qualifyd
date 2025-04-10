@@ -131,6 +131,7 @@ func main() {
 		r.Post("/login", authHandler.Login)
 		r.Post("/register", authHandler.Register)
 		r.Post("/refresh-token", authHandler.RefreshToken)
+		r.Post("/accept-invitation", authHandler.HandleAcceptInvitation)
 
 		// Protected routes
 		r.Group(func(r chi.Router) {
