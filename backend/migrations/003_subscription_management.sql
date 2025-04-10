@@ -1,20 +1,3 @@
--- Enhance organizations table with subscription fields
-ALTER TABLE organizations
-ADD COLUMN IF NOT EXISTS subscription_start_date TIMESTAMP WITH TIME ZONE,
-ADD COLUMN IF NOT EXISTS subscription_end_date TIMESTAMP WITH TIME ZONE,
-ADD COLUMN IF NOT EXISTS subscription_status VARCHAR(50) DEFAULT 'active',
-ADD COLUMN IF NOT EXISTS payment_due_date TIMESTAMP WITH TIME ZONE,
-ADD COLUMN IF NOT EXISTS last_payment_date TIMESTAMP WITH TIME ZONE,
-ADD COLUMN IF NOT EXISTS payment_method VARCHAR(255),
-ADD COLUMN IF NOT EXISTS payment_method_details JSONB,
-ADD COLUMN IF NOT EXISTS auto_renew BOOLEAN DEFAULT TRUE,
-ADD COLUMN IF NOT EXISTS email_reminders BOOLEAN DEFAULT TRUE,
--- Remove legacy quota fields
-DROP COLUMN IF EXISTS max_users,
-DROP COLUMN IF EXISTS max_templates,
-DROP COLUMN IF EXISTS max_environments,
-DROP COLUMN IF EXISTS max_runtime;
-
 -- Quota tracking table for organizations
 CREATE TABLE IF NOT EXISTS organization_quotas (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

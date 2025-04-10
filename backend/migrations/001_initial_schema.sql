@@ -39,9 +39,6 @@ CREATE TABLE IF NOT EXISTS organizations (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Remove user_organizations table as users now belong to one organization directly
--- DROP TABLE IF EXISTS user_organizations;
-
 -- Add indexes
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_users_organization_id ON users(organization_id);
