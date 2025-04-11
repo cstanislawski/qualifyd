@@ -1,20 +1,3 @@
--- Create users table
-CREATE TABLE IF NOT EXISTS users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL,
-    first_name VARCHAR(100),
-    last_name VARCHAR(100),
-    status VARCHAR(50) NOT NULL DEFAULT 'pending',
-    organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
-    last_login_at TIMESTAMP WITH TIME ZONE,
-    invitation_token VARCHAR(255) UNIQUE,
-    invitation_expires_at TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
 -- Create organizations table
 CREATE TABLE IF NOT EXISTS organizations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -35,6 +18,23 @@ CREATE TABLE IF NOT EXISTS organizations (
     payment_method_details TEXT,
     auto_renew BOOLEAN DEFAULT FALSE,
     email_reminders BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Create users table
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL,
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    status VARCHAR(50) NOT NULL DEFAULT 'pending',
+    organization_id UUID REFERENCES organizations(id) ON DELETE SET NULL,
+    last_login_at TIMESTAMP WITH TIME ZONE,
+    invitation_token VARCHAR(255) UNIQUE,
+    invitation_expires_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
