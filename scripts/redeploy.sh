@@ -1,6 +1,19 @@
 #!/bin/bash
 set -e
 
+# Define the path for the fetched kubeconfig
+KUBECONFIG_PATH="$HOME/.kube/qualifyd-homeserver-config"
+
+# Ensure KUBECONFIG is set for subsequent kubectl commands
+if [ -f "$KUBECONFIG_PATH" ]; then
+    export KUBECONFIG="$KUBECONFIG_PATH"
+    echo "KUBECONFIG set to $KUBECONFIG_PATH for this script."
+else
+    echo "Error: Kubeconfig file $KUBECONFIG_PATH not found." >&2
+    echo "Please run ./scripts/start.sh or ./scripts/setup-local.sh first." >&2
+    exit 1
+fi
+
 # Function to show usage
 show_usage() {
     echo "Usage: $0 [options]"

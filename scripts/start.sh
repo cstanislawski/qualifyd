@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# Define the path for the fetched kubeconfig
+KUBECONFIG_PATH="$HOME/.kube/qualifyd-homeserver-config"
+
 # Function to check if a host entry exists
 check_host_entry() {
     local host=$1
@@ -29,6 +32,15 @@ done
 # Setup local environment
 echo "Setting up local environment..."
 ./scripts/setup-local.sh
+
+# Ensure KUBECONFIG is set for subsequent kubectl commands
+if [ -f "$KUBECONFIG_PATH" ]; then
+    export KUBECONFIG="$KUBECONFIG_PATH"
+    echo "KUBECONFIG set to $KUBECONFIG_PATH for this script."
+else
+    echo "Error: Kubeconfig file $KUBECONFIG_PATH not found. Run setup first." >&2
+    exit 1
+fi
 
 # Build and load backend image
 echo "Building and loading backend image..."
